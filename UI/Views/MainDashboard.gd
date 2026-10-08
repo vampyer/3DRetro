@@ -28,6 +28,7 @@ var _sorting_bar
 var _sidebar_nav
 var _game_grid_2d
 var _game_grid_3d
+var _viewport_container: SubViewportContainer
 var _couch_big_picture_view
 var _minimalist_list_view
 var _detail_panel
@@ -53,6 +54,7 @@ func _ready() -> void:
 	_initialize_services()
 	_initialize_ui_components()
 	_load_and_scan_games()
+	_on_theme_changed(0) # Apply initial default skin theme
 
 func _initialize_services() -> void:
 	_db = DatabaseContextScript.new()
@@ -126,15 +128,15 @@ func _initialize_ui_components() -> void:
 	_game_grid_2d.game_selected.connect(_on_game_selected)
 	_grid_container.add_child(_game_grid_2d)
 
-	var viewport_container = SubViewportContainer.new()
-	viewport_container.anchor_right = 1.0
-	viewport_container.anchor_bottom = 1.0
-	viewport_container.stretch = true
-	viewport_container.visible = false
-	_grid_container.add_child(viewport_container)
+	_viewport_container = SubViewportContainer.new()
+	_viewport_container.anchor_right = 1.0
+	_viewport_container.anchor_bottom = 1.0
+	_viewport_container.stretch = true
+	_viewport_container.visible = false
+	_grid_container.add_child(_viewport_container)
 
 	var viewport = SubViewport.new()
-	viewport_container.add_child(viewport)
+	_viewport_container.add_child(viewport)
 
 	_game_grid_3d = GameGrid3DScript.new()
 	_game_grid_3d.game_selected_3d.connect(_on_game_selected)
@@ -339,6 +341,8 @@ func _switch_interface_model(model_index: int) -> void:
 	_game_grid_2d.visible = (model_index == 0)
 	_couch_big_picture_view.visible = (model_index == 1)
 	_minimalist_list_view.visible = (model_index == 2)
+	if _viewport_container:
+		_viewport_container.visible = (model_index == 3)
 
 func _on_sort_mode_changed(sort_index: int) -> void:
 	var sorted = _currently_displayed_games.duplicate()
@@ -367,10 +371,14 @@ func _on_custom_color_picker_requested() -> void:
 	_color_picker_modal.open_customizer(colors.background, colors.surface, colors.accent, colors.text)
 
 func _on_custom_colors_applied(bg: Color, surface: Color, accent: Color, text: Color) -> void:
-	self_modulate = bg
-	_sidebar_nav.self_modulate = surface
-	_detail_panel.self_modulate = surface
-	_status_label.self_modulate = text
+	var colors = {
+		"background": bg,
+		"surface": surface,
+		"accent": accent,
+		"text": text,
+		"secondary": text.darkened(0.3)
+	}
+	ThemeManagerScript._recursive_apply_colors(self, colors)
 	_status_label.text = "Custom interface colors applied."
 
 func _on_system_config_requested() -> void:
