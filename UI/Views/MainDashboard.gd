@@ -286,18 +286,6 @@ func _initialize_ui_components() -> void:
 	_system_config_modal = SystemConfigModalScript.new(_sys_config_manager)
 	add_child(_system_config_modal)
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_F11:
-			_toggle_fullscreen()
-
-func _toggle_fullscreen() -> void:
-	var mode = DisplayServer.window_get_mode()
-	if mode == DisplayServer.WINDOW_MODE_FULLSCREEN or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
-	else:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
-
 func _on_menu_open_file_requested() -> void:
 	_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	_file_dialog.filters = ["*.sfc, *.smc ; Super Nintendo", "*.nes ; Nintendo", "*.md, *.smd ; Genesis", "*.gba ; Game Boy Advance", "*.iso, *.chd ; Disc Images", "*.zip, *.7z ; ROM Archives", "*.* ; All Files"]
