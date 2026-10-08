@@ -231,32 +231,34 @@ func _initialize_ui_components() -> void:
 	body_hbox.add_child(_grid_container)
 
 	_game_grid_2d = VirtualGameGridScript.new()
-	_game_grid_2d.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_game_grid_2d.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_game_grid_2d.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_game_grid_2d.game_selected.connect(_on_game_selected)
 	_grid_container.add_child(_game_grid_2d)
 
 	_viewport_container = SubViewportContainer.new()
-	_viewport_container.anchor_right = 1.0
-	_viewport_container.anchor_bottom = 1.0
+	_viewport_container.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_viewport_container.stretch = true
 	_viewport_container.visible = false
 	_grid_container.add_child(_viewport_container)
 
 	var viewport = SubViewport.new()
+	viewport.size = Vector2i(1280, 720)
 	_viewport_container.add_child(viewport)
 
 	_game_grid_3d = GameGrid3DScript.new()
+	_game_grid_3d.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_game_grid_3d.game_selected_3d.connect(_on_game_selected)
 	viewport.add_child(_game_grid_3d)
 
 	_couch_big_picture_view = CouchBigPictureViewScript.new()
+	_couch_big_picture_view.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_couch_big_picture_view.visible = false
 	_couch_big_picture_view.big_picture_game_selected.connect(_on_game_selected)
 	_couch_big_picture_view.big_picture_launch_requested.connect(_on_game_launch_requested)
 	_grid_container.add_child(_couch_big_picture_view)
 
 	_minimalist_list_view = MinimalistListViewScript.new()
+	_minimalist_list_view.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_minimalist_list_view.visible = false
 	_minimalist_list_view.list_game_selected.connect(_on_game_selected)
 	_minimalist_list_view.list_game_activated.connect(_on_game_launch_requested)

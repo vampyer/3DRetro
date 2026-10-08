@@ -64,22 +64,24 @@ func _build_ui() -> void:
 
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("margin_left", 40)
-	vbox.add_theme_constant_override("margin_top", 40)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	overlay.add_child(vbox)
 
 	_hero_title_lbl = Label.new()
 	_hero_title_lbl.text = "Select a Game"
+	_hero_title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hero_title_lbl.add_theme_font_size_override("font_size", 36)
 	vbox.add_child(_hero_title_lbl)
 
 	_hero_platform_lbl = Label.new()
 	_hero_platform_lbl.text = "Platform: --"
+	_hero_platform_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hero_platform_lbl.add_theme_font_size_override("font_size", 20)
 	vbox.add_child(_hero_platform_lbl)
 
 	_hero_synopsis_lbl = Label.new()
 	_hero_synopsis_lbl.text = "Press Left/Right on Gamepad D-Pad to browse library."
+	_hero_synopsis_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hero_synopsis_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_hero_synopsis_lbl)
 
