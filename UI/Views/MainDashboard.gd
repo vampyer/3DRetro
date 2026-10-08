@@ -10,6 +10,7 @@ const ShaderPresetManagerScript = preload("res://UI/Services/ShaderPresetManager
 const ThemeManagerScript = preload("res://UI/Services/ThemeManager.gd")
 
 const TopAppMenuBarScript = preload("res://UI/Components/TopAppMenuBar.gd")
+const LogoBannerScript = preload("res://UI/Components/LogoBanner.gd")
 const SortingControlBarScript = preload("res://UI/Components/SortingControlBar.gd")
 const SidebarCategoryNavScript = preload("res://UI/Components/SidebarCategoryNav.gd")
 const VirtualGameGridScript = preload("res://UI/Components/VirtualGameGrid.gd")
@@ -23,6 +24,7 @@ const SystemConfigModalScript = preload("res://UI/Components/SystemConfigModal.g
 
 var _background_rect: TextureRect
 var _top_menu_bar
+var _logo_banner
 var _download_progress_bar: ProgressBar
 var _status_label: Label
 var _interface_model_selector: OptionButton
@@ -124,11 +126,9 @@ func _initialize_ui_components() -> void:
 	status_container.add_theme_constant_override("separation", 16)
 	header_margin.add_child(status_container)
 
-	var logo_lbl = Label.new()
-	logo_lbl.text = "🕹️ 3DRETRO"
-	logo_lbl.add_theme_font_size_override("font_size", 18)
-	logo_lbl.modulate = Color(0.0, 0.9, 1.0)
-	status_container.add_child(logo_lbl)
+	# Stylized 3D Retro Neon Logo Badge
+	_logo_banner = LogoBannerScript.new()
+	status_container.add_child(_logo_banner)
 
 	_status_label = Label.new()
 	_status_label.text = "Initializing 3DRetro Engine..."
