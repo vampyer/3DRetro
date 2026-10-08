@@ -54,7 +54,6 @@ var _all_scanned_games: Array = []
 var _currently_displayed_games: Array = []
 var _loaded_games: Dictionary = {}
 var _current_interface_model: int = 0
-var _pending_launch_game: Dictionary = {}
 
 func _ready() -> void:
 	_initialize_services()
@@ -81,10 +80,18 @@ func _initialize_ui_components() -> void:
 	_background_rect.stretch_mode = TextureRect.STRETCH_SCALE
 	add_child(_background_rect)
 
+	var outer_margin = MarginContainer.new()
+	outer_margin.anchor_right = 1.0
+	outer_margin.anchor_bottom = 1.0
+	outer_margin.add_theme_constant_override("margin_left", 8)
+	outer_margin.add_theme_constant_override("margin_top", 4)
+	outer_margin.add_theme_constant_override("margin_right", 8)
+	outer_margin.add_theme_constant_override("margin_bottom", 8)
+	add_child(outer_margin)
+
 	var root_vbox = VBoxContainer.new()
-	root_vbox.anchor_right = 1.0
-	root_vbox.anchor_bottom = 1.0
-	add_child(root_vbox)
+	root_vbox.add_theme_constant_override("separation", 8)
+	outer_margin.add_child(root_vbox)
 
 	# 0. Top Main Application Menu Bar (File, View, Tools, Help)
 	_top_menu_bar = TopAppMenuBarScript.new()
@@ -103,28 +110,45 @@ func _initialize_ui_components() -> void:
 	root_vbox.add_child(_top_menu_bar)
 
 	# Header Bar
+	var header_panel = PanelContainer.new()
+	root_vbox.add_child(header_panel)
+
+	var header_margin = MarginContainer.new()
+	header_margin.add_theme_constant_override("margin_left", 12)
+	header_margin.add_theme_constant_override("margin_right", 12)
+	header_margin.add_theme_constant_override("margin_top", 6)
+	header_margin.add_theme_constant_override("margin_bottom", 6)
+	header_panel.add_child(header_margin)
+
 	var status_container = HBoxContainer.new()
+	status_container.add_theme_constant_override("separation", 16)
+	header_margin.add_child(status_container)
+
+	var logo_lbl = Label.new()
+	logo_lbl.text = "🕹️ 3DRETRO"
+	logo_lbl.add_theme_font_size_override("font_size", 18)
+	logo_lbl.modulate = Color(0.0, 0.9, 1.0)
+	status_container.add_child(logo_lbl)
+
 	_status_label = Label.new()
 	_status_label.text = "Initializing 3DRetro Engine..."
 	_status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	
+	status_container.add_child(_status_label)
+
 	_download_progress_bar = ProgressBar.new()
 	_download_progress_bar.visible = false
 	_download_progress_bar.custom_minimum_size = Vector2(250, 20)
+	status_container.add_child(_download_progress_bar)
 
 	_interface_model_selector = OptionButton.new()
-	_interface_model_selector.custom_minimum_size = Vector2(220, 30)
+	_interface_model_selector.custom_minimum_size = Vector2(220, 32)
 	_interface_model_selector.focus_mode = Control.FOCUS_ALL
 	_interface_model_selector.add_item("🖥️ Classic 3-Column Desktop", 0)
 	_interface_model_selector.add_item("📺 Couch Big Picture TV", 1)
 	_interface_model_selector.add_item("📋 Minimalist Compact List", 2)
 	_interface_model_selector.add_item("🎲 3D Arcade Carousel", 3)
 	_interface_model_selector.item_selected.connect(_switch_interface_model)
-
-	status_container.add_child(_status_label)
-	status_container.add_child(_download_progress_bar)
 	status_container.add_child(_interface_model_selector)
-	root_vbox.add_child(status_container)
 
 	# Toolbar
 	_sorting_bar = SortingControlBarScript.new()
@@ -138,6 +162,7 @@ func _initialize_ui_components() -> void:
 
 	# Body Layout
 	var body_hbox = HBoxContainer.new()
+	body_hbox.add_theme_constant_override("separation", 12)
 	body_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root_vbox.add_child(body_hbox)
@@ -212,8 +237,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
 		if event.keycode == KEY_F11:
 			_toggle_fullscreen()
-		elif event.is_action_pressed("ui_cancel"):
-			pass
 
 func _toggle_fullscreen() -> void:
 	var mode = DisplayServer.window_get_mode()

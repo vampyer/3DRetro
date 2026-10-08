@@ -1,7 +1,7 @@
 class_name ThemeManager
 extends RefCounted
 
-## Theme & Skin Manager Service with Procedural Skin Background Wallpaper Generation for Godot 4.7 Standard GDScript.
+## Theme & Skin Manager Service with High-Fidelity UI Styling & Procedural Wallpapers for Godot 4.7 Standard GDScript.
 
 enum UIThemeMode {
 	CYBERPUNK_DARK = 0,
@@ -14,35 +14,35 @@ static func get_theme_colors(mode: int) -> Dictionary:
 	match mode:
 		UIThemeMode.CYBERPUNK_DARK:
 			return {
-				"background": Color(0.06, 0.06, 0.10),
-				"surface": Color(0.12, 0.12, 0.18, 0.9),
-				"accent": Color(0.0, 0.85, 0.95),
-				"text": Color(0.95, 0.95, 1.0),
-				"secondary": Color(0.6, 0.6, 0.75)
+				"background": Color(0.05, 0.05, 0.09),
+				"surface": Color(0.10, 0.11, 0.18, 0.92),
+				"accent": Color(0.0, 0.90, 1.0), # Electric Cyan
+				"text": Color(0.95, 0.96, 1.0),
+				"secondary": Color(0.55, 0.60, 0.75)
 			}
 		UIThemeMode.SYNTHWAVE_RETRO:
 			return {
-				"background": Color(0.10, 0.04, 0.16),
-				"surface": Color(0.20, 0.08, 0.30, 0.9),
-				"accent": Color(0.98, 0.22, 0.76),
-				"text": Color(1.0, 0.92, 0.96),
+				"background": Color(0.09, 0.02, 0.15),
+				"surface": Color(0.18, 0.06, 0.28, 0.92),
+				"accent": Color(1.0, 0.16, 0.75), # Neon Magenta
+				"text": Color(1.0, 0.92, 0.97),
 				"secondary": Color(0.85, 0.45, 0.75)
 			}
 		UIThemeMode.MODERN_CLEAN_DARK:
 			return {
-				"background": Color(0.08, 0.08, 0.11),
-				"surface": Color(0.15, 0.15, 0.20, 0.9),
-				"accent": Color(0.30, 0.60, 1.0),
-				"text": Color(0.92, 0.92, 0.95),
-				"secondary": Color(0.60, 0.60, 0.68)
+				"background": Color(0.06, 0.07, 0.10),
+				"surface": Color(0.12, 0.14, 0.20, 0.92),
+				"accent": Color(0.24, 0.55, 1.0), # Sapphire Blue
+				"text": Color(0.92, 0.94, 0.98),
+				"secondary": Color(0.55, 0.58, 0.68)
 			}
 		UIThemeMode.CLEAN_LIGHT:
 			return {
-				"background": Color(0.90, 0.91, 0.94),
-				"surface": Color(0.98, 0.98, 1.0, 0.92),
-				"accent": Color(0.10, 0.45, 0.90),
-				"text": Color(0.10, 0.10, 0.15),
-				"secondary": Color(0.40, 0.40, 0.50)
+				"background": Color(0.92, 0.94, 0.97),
+				"surface": Color(1.0, 1.0, 1.0, 0.95),
+				"accent": Color(0.08, 0.42, 0.92), # Cobalt Blue
+				"text": Color(0.08, 0.10, 0.16),
+				"secondary": Color(0.40, 0.45, 0.55)
 			}
 		_:
 			return get_theme_colors(UIThemeMode.CYBERPUNK_DARK)
@@ -53,17 +53,17 @@ static func generate_skin_background_texture(mode: int) -> Texture2D:
 
 	match mode:
 		UIThemeMode.CYBERPUNK_DARK:
-			grad.colors = PackedColorArray([Color(0.12, 0.08, 0.22), Color(0.04, 0.04, 0.09)])
+			grad.colors = PackedColorArray([Color(0.12, 0.08, 0.24), Color(0.03, 0.03, 0.07)])
 			grad.offsets = PackedFloat32Array([0.0, 1.0])
 		UIThemeMode.SYNTHWAVE_RETRO:
-			grad.colors = PackedColorArray([Color(0.45, 0.08, 0.35), Color(0.14, 0.02, 0.20)])
+			grad.colors = PackedColorArray([Color(0.48, 0.06, 0.38), Color(0.10, 0.01, 0.18)])
 			grad.offsets = PackedFloat32Array([0.0, 1.0])
 			fill_type = GradientTexture2D.FILL_LINEAR
 		UIThemeMode.MODERN_CLEAN_DARK:
-			grad.colors = PackedColorArray([Color(0.14, 0.14, 0.18), Color(0.05, 0.05, 0.08)])
+			grad.colors = PackedColorArray([Color(0.15, 0.17, 0.25), Color(0.04, 0.05, 0.08)])
 			grad.offsets = PackedFloat32Array([0.0, 1.0])
 		UIThemeMode.CLEAN_LIGHT:
-			grad.colors = PackedColorArray([Color(0.96, 0.97, 1.0), Color(0.85, 0.88, 0.94)])
+			grad.colors = PackedColorArray([Color(0.98, 0.99, 1.0), Color(0.84, 0.88, 0.95)])
 			grad.offsets = PackedFloat32Array([0.0, 1.0])
 
 	var tex = GradientTexture2D.new()
@@ -83,25 +83,31 @@ static func _recursive_apply_colors(node: Node, colors: Dictionary) -> void:
 	if node is PanelContainer or node is Panel:
 		var sb = StyleBoxFlat.new()
 		sb.bg_color = colors["surface"]
-		sb.set_corner_radius_all(6)
+		sb.set_corner_radius_all(8)
 		sb.border_width_left = 1
 		sb.border_width_top = 1
 		sb.border_width_right = 1
 		sb.border_width_bottom = 1
-		sb.border_color = colors["accent"].darkened(0.4)
+		sb.border_color = colors["accent"].darkened(0.5)
+		sb.shadow_color = Color(0, 0, 0, 0.3)
+		sb.shadow_size = 4
 		node.add_theme_stylebox_override("panel", sb)
 	elif node is Button:
 		node.add_theme_color_override("font_color", colors["text"])
 		node.add_theme_color_override("font_hover_color", colors["accent"])
 		var sb_norm = StyleBoxFlat.new()
 		sb_norm.bg_color = colors["surface"]
-		sb_norm.set_corner_radius_all(4)
+		sb_norm.set_corner_radius_all(6)
+		sb_norm.content_margin_left = 8
+		sb_norm.content_margin_right = 8
 		node.add_theme_stylebox_override("normal", sb_norm)
 		var sb_hover = StyleBoxFlat.new()
-		sb_hover.bg_color = colors["surface"].lightened(0.15)
+		sb_hover.bg_color = colors["surface"].lightened(0.18)
 		sb_hover.border_width_bottom = 2
 		sb_hover.border_color = colors["accent"]
-		sb_hover.set_corner_radius_all(4)
+		sb_hover.set_corner_radius_all(6)
+		sb_hover.content_margin_left = 8
+		sb_hover.content_margin_right = 8
 		node.add_theme_stylebox_override("hover", sb_hover)
 	elif node is Label:
 		node.add_theme_color_override("font_color", colors["text"])
