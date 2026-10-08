@@ -192,10 +192,6 @@ func _initialize_ui_components() -> void:
 	_about_dialog.dialog_text = "🕹️ 3DRetro High-Performance Desktop Frontend v1.0.0\n\nBuilt on Standard Godot Engine 4.7 GDScript.\nFeatures 33 Emulated Systems, 4 Dynamic View Models, RetroBat System Configs, CRT Shaders, and Gamepad Autoconfig."
 	add_child(_about_dialog)
 
-	_selection_modal = EmulatorSelectionModalScript.new()
-	_selection_modal.mode_selected.connect(_on_emulator_mode_selected)
-	add_child(_selection_modal)
-
 	_color_picker_modal = ColorPickerModalScript.new()
 	_color_picker_modal.custom_colors_applied.connect(_on_custom_colors_applied)
 	add_child(_color_picker_modal)
@@ -471,7 +467,7 @@ func _load_and_scan_games() -> void:
 				"is_favorite": true,
 				"play_count": 19,
 				"total_play_time": 480,
-				"synopsis": "Unite Kyogre and Groudon under Rayquaza' skies in the Hoenn region!",
+				"synopsis": "Unite Kyogre and Groudon under Rayquaza's skies in the Hoenn region!",
 				"max_players": 4
 			}
 		]
@@ -587,19 +583,15 @@ func _on_metadata_download_requested(game_id: String) -> void:
 func _on_game_launch_requested(game_id: String) -> void:
 	if _loaded_games.has(game_id):
 		var game = _loaded_games[game_id]
-		_pending_launch_game = game
-		_selection_modal.prompt_user_choice(game.get("platform", "retro"))
-
-func _on_emulator_mode_selected(mode: int) -> void:
-	if _pending_launch_game.is_empty():
-		return
-	
-	var mode_name = "Standalone Engine" if mode == 0 else "RetroArch Libretro Core"
-	var title = _pending_launch_game.get("title", "Game")
-	_status_label.text = "Launching " + title + " via " + mode_name + "..."
-	_bgm_player.pause_for_game()
-	
-	get_tree().create_timer(3.0).timeout.connect(func():
-		_status_label.text = "Finished session for " + title + "."
-		_bgm_player.resume_after_game()
-	)
+		var title = game.get("title", "Game")
+		var plat = game.get("platform", "SNES")
+		_status_label.text = "Launching " + title + " (" + str(plat).to_upper() + ")..."
+		_bgm_player.pause_for_game()
+		
+		game["play_count"] = game.get("play_count", 0) + 1
+		_db.save_game(game)
+		
+		get_tree().create_timer(3.0).timeout.connect(func():
+			_status_label.text = "Finished session for " + title + "."
+			_bgm_player.resume_after_game()
+		)
