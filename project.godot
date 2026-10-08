@@ -8,7 +8,8 @@ config_version=5
 config/name="3DRetro"
 
 config/description="High-Performance Windows Desktop Emulation Frontend"
-run/main_scene="res://UI/Views/MainDashboard.cs"
+run/main_scene="res://UI/Views/MainDashboard.tscn"
+
 config/features=PackedStringArray("4.4", "C#", "Forward Plus")
 config/icon="res://icon.png"
 
