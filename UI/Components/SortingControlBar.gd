@@ -104,6 +104,17 @@ func set_selected_theme(theme_index: int) -> void:
 	if _theme_selector and theme_index >= 0 and theme_index < _theme_selector.item_count:
 		_theme_selector.selected = theme_index
 
+func set_gamepad_status(connected: bool, device_name: String = "") -> void:
+	if not _pad_status_label:
+		return
+	if connected:
+		var name_clean = device_name if not device_name.is_empty() else "Gamepad"
+		_pad_status_label.text = "🎮 " + name_clean
+		_pad_status_label.modulate = Color(0.2, 0.95, 0.4)
+	else:
+		_pad_status_label.text = "⌨️ Keyboard & Mouse"
+		_pad_status_label.modulate = Color(0.7, 0.8, 1.0)
+
 func apply_theme_colors(colors: Dictionary) -> void:
 	var accent = colors.get("accent", Color(0.0, 0.85, 0.95))
 	var text_col = colors.get("text", Color(1.0, 1.0, 1.0))

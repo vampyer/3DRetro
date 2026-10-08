@@ -142,6 +142,19 @@ func _add_button(label: String, set_as_default: bool = false) -> void:
 	if set_as_default:
 		_set_active_button(btn)
 
+func focus_search_box() -> void:
+	if _search_box:
+		_search_box.grab_focus()
+
+func focus_active_category() -> void:
+	if _active_button and is_instance_valid(_active_button):
+		_active_button.grab_focus()
+	elif _button_container:
+		for child in _button_container.get_children():
+			if child is Button:
+				child.grab_focus()
+				break
+
 func _set_active_button(btn: Button) -> void:
 	if _active_button and is_instance_valid(_active_button):
 		_active_button.add_theme_stylebox_override("normal", StyleBoxEmpty.new())

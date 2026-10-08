@@ -62,15 +62,59 @@ func _ready() -> void:
 	_initialize_ui_components()
 	_load_and_scan_games()
 	_on_theme_changed(0) # Apply initial default skin theme & backdrop texture
-	get_tree().create_timer(0.3).timeout.connect(func():
-		for t in range(4):
-			_on_theme_changed(t)
-			await get_tree().process_frame
-			await get_tree().process_frame
-			var img = get_viewport().get_texture().get_image()
-			img.save_png("d:/Emulation-menu/diag_skin_" + str(t) + ".png")
-		_on_theme_changed(0)
-	)
+	Input.joy_connection_changed.connect(_on_joy_connection_changed)
+	_update_gamepad_status()
+
+func _on_joy_connection_changed(device_id: int, connected: bool) -> void:
+	_update_gamepad_status()
+	if connected:
+		var name_str = Input.get_joy_name(device_id)
+		_status_label.text = "🎮 Controller Connected: " + name_str
+	else:
+		_status_label.text = "🔌 Controller Disconnected. Keyboard & Mouse active."
+
+func _update_gamepad_status() -> void:
+	var joypads = Input.get_connected_joypads()
+	if joypads.size() > 0:
+		var dev_name = Input.get_joy_name(joypads[0])
+		if _sorting_bar and _sorting_bar.has_method("set_gamepad_status"):
+			_sorting_bar.set_gamepad_status(true, dev_name)
+	else:
+		if _sorting_bar and _sorting_bar.has_method("set_gamepad_status"):
+			_sorting_bar.set_gamepad_status(false)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_F11:
+			_toggle_fullscreen()
+		elif event.ctrl_pressed and event.keycode == KEY_F:
+			if _sidebar_nav and _sidebar_nav.has_method("focus_search_box"):
+				_sidebar_nav.focus_search_box()
+		elif event.ctrl_pressed and event.keycode == KEY_R:
+			_load_and_scan_games()
+		elif event.ctrl_pressed and event.keycode == KEY_O:
+			_on_menu_open_file_requested()
+		elif event.keycode == KEY_F1:
+			_on_menu_open_about_requested()
+	elif event is InputEventJoypadButton and event.pressed:
+		if event.button_index == JOY_BUTTON_LEFT_SHOULDER:
+			var prev_model = (_current_interface_model - 1 + 4) % 4
+			_interface_model_selector.selected = prev_model
+			_switch_interface_model(prev_model)
+		elif event.button_index == JOY_BUTTON_RIGHT_SHOULDER:
+			var next_model = (_current_interface_model + 1) % 4
+			_interface_model_selector.selected = next_model
+			_switch_interface_model(next_model)
+		elif event.button_index == JOY_BUTTON_Y:
+			if _sidebar_nav and _sidebar_nav.has_method("focus_search_box"):
+				_sidebar_nav.focus_search_box()
+
+func _toggle_fullscreen() -> void:
+	var mode = DisplayServer.window_get_mode()
+	if mode == DisplayServer.WINDOW_MODE_FULLSCREEN or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	else:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 
 func _initialize_services() -> void:
 	_db = DatabaseContextScript.new()
