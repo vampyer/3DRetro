@@ -125,7 +125,22 @@ static func _recursive_apply_colors(node: Node, colors: Dictionary) -> void:
 		sb.shadow_color = Color(0, 0, 0, 0.4)
 		sb.shadow_size = 6
 		node.add_theme_stylebox_override("panel", sb)
-	elif node is Button:
+	elif node is MenuBar:
+		node.add_theme_color_override("font_color", colors["text"])
+		node.add_theme_color_override("font_hover_color", colors["accent"])
+		node.add_theme_color_override("font_pressed_color", colors.get("accent_secondary", colors["accent"]))
+		var sb_mb = StyleBoxFlat.new()
+		sb_mb.bg_color = colors["surface"].darkened(0.1)
+		sb_mb.border_width_left = 1
+		sb_mb.border_width_top = 1
+		sb_mb.border_width_right = 1
+		sb_mb.border_width_bottom = 1
+		sb_mb.border_color = colors["border_color"]
+		sb_mb.set_corner_radius_all(4)
+		sb_mb.content_margin_left = 10
+		sb_mb.content_margin_right = 10
+		node.add_theme_stylebox_override("normal", sb_mb)
+	elif node is OptionButton or node is Button:
 		node.add_theme_color_override("font_color", colors["text"])
 		node.add_theme_color_override("font_hover_color", colors["accent"])
 		node.add_theme_color_override("font_pressed_color", colors.get("accent_secondary", colors["accent"]))
@@ -151,6 +166,33 @@ static func _recursive_apply_colors(node: Node, colors: Dictionary) -> void:
 		sb_hover.content_margin_left = 8
 		sb_hover.content_margin_right = 8
 		node.add_theme_stylebox_override("hover", sb_hover)
+
+		if node is OptionButton:
+			var popup = node.get_popup()
+			if popup:
+				popup.add_theme_color_override("font_color", colors["text"])
+				popup.add_theme_color_override("font_hover_color", colors["accent"])
+				var sb_popup = StyleBoxFlat.new()
+				sb_popup.bg_color = colors["surface"]
+				sb_popup.border_width_left = 1
+				sb_popup.border_width_top = 1
+				sb_popup.border_width_right = 1
+				sb_popup.border_width_bottom = 1
+				sb_popup.border_color = colors["border_color"]
+				sb_popup.set_corner_radius_all(6)
+				popup.add_theme_stylebox_override("panel", sb_popup)
+	elif node is PopupMenu:
+		node.add_theme_color_override("font_color", colors["text"])
+		node.add_theme_color_override("font_hover_color", colors["accent"])
+		var sb_popup = StyleBoxFlat.new()
+		sb_popup.bg_color = colors["surface"]
+		sb_popup.border_width_left = 1
+		sb_popup.border_width_top = 1
+		sb_popup.border_width_right = 1
+		sb_popup.border_width_bottom = 1
+		sb_popup.border_color = colors["border_color"]
+		sb_popup.set_corner_radius_all(6)
+		node.add_theme_stylebox_override("panel", sb_popup)
 	elif node is Label:
 		node.add_theme_color_override("font_color", colors["text"])
 	elif node is LineEdit:

@@ -27,6 +27,60 @@ func _init() -> void:
 	custom_minimum_size = Vector2(0, 30)
 	_build_menu_bar()
 
+func apply_theme_colors(colors: Dictionary) -> void:
+	var accent = colors.get("accent", Color(0.0, 0.85, 0.95))
+	var sec_accent = colors.get("accent_secondary", accent)
+	var text_col = colors.get("text", Color(1.0, 1.0, 1.0))
+	var surface = colors.get("surface", Color(0.1, 0.1, 0.15))
+	var border_col = colors.get("border_color", accent.darkened(0.5))
+
+	add_theme_color_override("font_color", text_col)
+	add_theme_color_override("font_hover_color", accent)
+	add_theme_color_override("font_pressed_color", sec_accent)
+	add_theme_color_override("font_focus_color", accent)
+
+	var sb_norm = StyleBoxFlat.new()
+	sb_norm.bg_color = surface.darkened(0.1)
+	sb_norm.border_width_left = 1
+	sb_norm.border_width_top = 1
+	sb_norm.border_width_right = 1
+	sb_norm.border_width_bottom = 1
+	sb_norm.border_color = border_col
+	sb_norm.set_corner_radius_all(4)
+	sb_norm.content_margin_left = 10
+	sb_norm.content_margin_right = 10
+	add_theme_stylebox_override("normal", sb_norm)
+
+	var sb_hover = StyleBoxFlat.new()
+	sb_hover.bg_color = surface.lightened(0.15)
+	sb_hover.border_width_bottom = 2
+	sb_hover.border_color = accent
+	sb_hover.set_corner_radius_all(4)
+	sb_hover.content_margin_left = 10
+	sb_hover.content_margin_right = 10
+	add_theme_stylebox_override("hover", sb_hover)
+
+	for popup in [_file_menu, _view_menu, _tools_menu, _help_menu]:
+		if popup:
+			popup.add_theme_color_override("font_color", text_col)
+			popup.add_theme_color_override("font_hover_color", accent)
+			popup.add_theme_color_override("font_separator_color", colors.get("secondary", text_col.darkened(0.3)))
+			
+			var sb_popup = StyleBoxFlat.new()
+			sb_popup.bg_color = surface
+			sb_popup.border_width_left = 1
+			sb_popup.border_width_top = 1
+			sb_popup.border_width_right = 1
+			sb_popup.border_width_bottom = 1
+			sb_popup.border_color = border_col
+			sb_popup.set_corner_radius_all(6)
+			popup.add_theme_stylebox_override("panel", sb_popup)
+
+			var sb_item_hover = StyleBoxFlat.new()
+			sb_item_hover.bg_color = surface.lightened(0.18)
+			sb_item_hover.set_corner_radius_all(4)
+			popup.add_theme_stylebox_override("hover", sb_item_hover)
+
 func _build_menu_bar() -> void:
 	# 1. File Menu
 	_file_menu = PopupMenu.new()
