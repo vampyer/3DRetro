@@ -21,13 +21,8 @@ func _init() -> void:
 	custom_minimum_size = Vector2(800, 600)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
-	stretch = false
+	stretch = true
 	_build_3d_scene()
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED:
-		if _sub_viewport and size.x > 0 and size.y > 0:
-			_sub_viewport.size = Vector2i(int(size.x), int(size.y))
 
 func apply_theme_colors(colors: Dictionary) -> void:
 	_current_accent = colors.get("accent", Color(0.0, 0.9, 1.0))
@@ -48,7 +43,6 @@ func apply_theme_colors(colors: Dictionary) -> void:
 
 func _build_3d_scene() -> void:
 	_sub_viewport = SubViewport.new()
-	_sub_viewport.size = Vector2i(1920, 1080)
 	_sub_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	_sub_viewport.handle_input_locally = true
 	add_child(_sub_viewport)
@@ -57,6 +51,7 @@ func _build_3d_scene() -> void:
 	_sub_viewport.add_child(world)
 
 	_camera = Camera3D.new()
+	_camera.keep_aspect = Camera3D.KEEP_WIDTH
 	world.add_child(_camera)
 	_camera.look_at_from_position(Vector3(0, 1.8, 4.5), Vector3(0, 1.1, 0))
 
