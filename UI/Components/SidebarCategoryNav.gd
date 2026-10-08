@@ -53,8 +53,18 @@ func apply_theme_colors(colors: Dictionary) -> void:
 		elif child is Button:
 			child.add_theme_color_override("font_color", text_col)
 			child.add_theme_color_override("font_hover_color", accent)
-			if child == _active_button:
-				_set_active_button(child)
+			child.add_theme_color_override("font_pressed_color", colors.get("accent_secondary", accent))
+			
+			var sb_norm = StyleBoxEmpty.new()
+			var sb_hover = StyleBoxFlat.new()
+			sb_hover.bg_color = Color(accent.r, accent.g, accent.b, 0.12)
+			sb_hover.set_corner_radius_all(4)
+			
+			child.add_theme_stylebox_override("normal", sb_norm)
+			child.add_theme_stylebox_override("hover", sb_hover)
+
+	if _active_button and is_instance_valid(_active_button):
+		_set_active_button(_active_button)
 
 func _build_ui() -> void:
 	var margin = MarginContainer.new()
@@ -132,7 +142,7 @@ func _add_button(label: String, set_as_default: bool = false) -> void:
 
 func _set_active_button(btn: Button) -> void:
 	if _active_button and is_instance_valid(_active_button):
-		_active_button.remove_theme_stylebox_override("normal")
+		_active_button.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
 	
 	_active_button = btn
 	var active_sb = StyleBoxFlat.new()

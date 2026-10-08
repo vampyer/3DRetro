@@ -109,8 +109,6 @@ static func apply_theme(target: Node, mode: int) -> void:
 static func _recursive_apply_colors(node: Node, colors: Dictionary) -> void:
 	if node.has_method("apply_theme_colors"):
 		node.call("apply_theme_colors", colors)
-		for child in node.get_children():
-			_recursive_apply_colors(child, colors)
 		return
 
 	if node is PanelContainer or node is Panel:
