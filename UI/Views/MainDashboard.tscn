@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://b3dretro_main_dashboard"]
 
-[ext_resource type="Script" path="res://UI/Views/MainDashboard.cs" id="1_main"]
+[ext_resource type="Script" path="res://UI/Views/MainDashboard.gd" id="1_main"]
 
 [node name="MainDashboard" type="Control"]
 layout_mode = 3
