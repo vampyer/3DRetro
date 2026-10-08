@@ -82,6 +82,8 @@ func _build_ui() -> void:
 	vbox.add_child(scroll)
 
 	_horizontal_row = HBoxContainer.new()
+	_horizontal_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_horizontal_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_horizontal_row.add_theme_constant_override("separation", 20)
 	scroll.add_child(_horizontal_row)
 

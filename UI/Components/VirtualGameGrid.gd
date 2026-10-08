@@ -19,12 +19,22 @@ func _init() -> void:
 	_build_ui()
 
 func _build_ui() -> void:
+	var margin = MarginContainer.new()
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_top", 16)
+	margin.add_theme_constant_override("margin_bottom", 16)
+	add_child(margin)
+
 	_grid_container = HFlowContainer.new()
 	_grid_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_grid_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_grid_container.alignment = HFlowContainer.ALIGNMENT_CENTER
 	_grid_container.add_theme_constant_override("h_separation", 16)
 	_grid_container.add_theme_constant_override("v_separation", 16)
-	add_child(_grid_container)
+	margin.add_child(_grid_container)
 
 func apply_theme_colors(colors: Dictionary) -> void:
 	_current_theme_colors = colors
