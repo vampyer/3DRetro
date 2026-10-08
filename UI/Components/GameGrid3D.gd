@@ -24,15 +24,21 @@ func _init() -> void:
 	stretch = true
 	_build_3d_scene()
 
+var _environment: Environment
+
 func apply_theme_colors(colors: Dictionary) -> void:
 	_current_accent = colors.get("accent", Color(0.0, 0.9, 1.0))
 	_current_sec_accent = colors.get("accent_secondary", Color(0.98, 0.2, 0.75))
+	var bg = colors.get("background", Color(0.04, 0.04, 0.08))
+
+	if _environment:
+		_environment.background_color = bg.darkened(0.2)
 
 	if _spot_light:
 		_spot_light.light_color = _current_accent
 
 	for cab_root in _cabinet_nodes:
-		if is_instance_valid(cab_root) and cab_root.get_child_count() >= 3:
+		if is_instance_valid(cab_root) and cab_root.get_child_count() >= 4:
 			var screen_mesh = cab_root.get_child(1)
 			if screen_mesh and screen_mesh.material_override:
 				screen_mesh.material_override.emission = _current_accent
@@ -50,36 +56,47 @@ func _build_3d_scene() -> void:
 	var world = Node3D.new()
 	_sub_viewport.add_child(world)
 
+	_environment = Environment.new()
+	_environment.background_mode = Environment.BG_COLOR
+	_environment.background_color = Color(0.04, 0.04, 0.08)
+	_environment.glow_enabled = true
+	_environment.glow_intensity = 0.8
+	_environment.glow_bloom = 0.25
+	var world_env = WorldEnvironment.new()
+	world_env.environment = _environment
+	world.add_child(world_env)
+
 	_camera = Camera3D.new()
 	_camera.keep_aspect = Camera3D.KEEP_WIDTH
+	_camera.fov = 60.0
 	world.add_child(_camera)
-	_camera.look_at_from_position(Vector3(0, 1.8, 4.5), Vector3(0, 1.1, 0))
+	_camera.look_at_from_position(Vector3(0, 1.35, 2.6), Vector3(0, 1.0, 0))
 
 	# 1. Reflective Floor Plane
 	var floor_mesh = MeshInstance3D.new()
 	var plane = PlaneMesh.new()
-	plane.size = Vector2(20.0, 20.0)
+	plane.size = Vector2(30.0, 30.0)
 	floor_mesh.mesh = plane
 	var floor_mat = StandardMaterial3D.new()
-	floor_mat.albedo_color = Color(0.05, 0.05, 0.08)
-	floor_mat.metallic = 0.8
-	floor_mat.roughness = 0.2
+	floor_mat.albedo_color = Color(0.06, 0.06, 0.10)
+	floor_mat.metallic = 0.85
+	floor_mat.roughness = 0.15
 	floor_mesh.material_override = floor_mat
 	floor_mesh.position = Vector3(0, 0, 0)
 	world.add_child(floor_mesh)
 
 	# 2. Lighting Setup
 	var dir_light = DirectionalLight3D.new()
-	dir_light.rotation_degrees = Vector3(-50, 45, 0)
-	dir_light.light_energy = 0.6
-	dir_light.light_color = Color(0.8, 0.85, 1.0)
+	dir_light.rotation_degrees = Vector3(-45, 30, 0)
+	dir_light.light_energy = 0.8
+	dir_light.light_color = Color(0.85, 0.9, 1.0)
 	world.add_child(dir_light)
 
 	_spot_light = SpotLight3D.new()
-	_spot_light.position = Vector3(0, 4.0, 3.5)
-	_spot_light.rotation_degrees = Vector3(-45, 0, 0)
-	_spot_light.spot_angle = 35.0
-	_spot_light.light_energy = 3.5
+	_spot_light.position = Vector3(0, 3.8, 2.2)
+	_spot_light.rotation_degrees = Vector3(-40, 0, 0)
+	_spot_light.spot_angle = 45.0
+	_spot_light.light_energy = 4.0
 	_spot_light.light_color = _current_accent
 	world.add_child(_spot_light)
 
@@ -97,7 +114,7 @@ func set_games(games: Array) -> void:
 	if count == 0:
 		return
 
-	var radius = 3.8
+	var radius = 2.2
 	var step_angle = (2.0 * PI) / max(count, 8)
 
 	for i in range(count):
@@ -107,41 +124,54 @@ func set_games(games: Array) -> void:
 		# Arcade Cabinet Body
 		var body_mesh = MeshInstance3D.new()
 		var box = BoxMesh.new()
-		box.size = Vector3(0.9, 1.8, 0.7)
+		box.size = Vector3(1.1, 2.0, 0.8)
 		body_mesh.mesh = box
-		body_mesh.position = Vector3(0, 0.9, 0)
+		body_mesh.position = Vector3(0, 1.0, 0)
 		var body_mat = StandardMaterial3D.new()
-		body_mat.albedo_color = Color(0.1, 0.1, 0.15)
+		body_mat.albedo_color = Color(0.08, 0.08, 0.12)
+		body_mat.metallic = 0.7
+		body_mat.roughness = 0.3
 		body_mesh.material_override = body_mat
 		cab_root.add_child(body_mesh)
 
-		# Glowing Screen
+		# Glowing Game Screen
 		var screen_mesh = MeshInstance3D.new()
 		var s_box = BoxMesh.new()
-		s_box.size = Vector3(0.75, 0.6, 0.05)
+		s_box.size = Vector3(0.95, 0.75, 0.05)
 		screen_mesh.mesh = s_box
-		screen_mesh.position = Vector3(0, 1.25, 0.36)
+		screen_mesh.position = Vector3(0, 1.35, 0.41)
 		var screen_mat = StandardMaterial3D.new()
-		screen_mat.albedo_color = Color(0.1, 0.6, 0.9)
+		screen_mat.albedo_color = Color(0.1, 0.6, 0.95)
 		screen_mat.emission_enabled = true
 		screen_mat.emission = _current_accent
-		screen_mat.emission_energy_multiplier = 1.5
+		screen_mat.emission_energy_multiplier = 2.0
 		screen_mesh.material_override = screen_mat
 		cab_root.add_child(screen_mesh)
 
-		# Glowing Marquee Header
+		# Glowing Marquee Header Banner
 		var marquee_mesh = MeshInstance3D.new()
 		var m_box = BoxMesh.new()
-		m_box.size = Vector3(0.85, 0.3, 0.1)
+		m_box.size = Vector3(1.02, 0.35, 0.12)
 		marquee_mesh.mesh = m_box
-		marquee_mesh.position = Vector3(0, 1.7, 0.36)
+		marquee_mesh.position = Vector3(0, 1.85, 0.41)
 		var marquee_mat = StandardMaterial3D.new()
-		marquee_mat.albedo_color = Color(0.95, 0.2, 0.7)
+		marquee_mat.albedo_color = Color(0.95, 0.2, 0.75)
 		marquee_mat.emission_enabled = true
 		marquee_mat.emission = _current_sec_accent
-		marquee_mat.emission_energy_multiplier = 2.0
+		marquee_mat.emission_energy_multiplier = 2.5
 		marquee_mesh.material_override = marquee_mat
 		cab_root.add_child(marquee_mesh)
+
+		# Control Panel Deck
+		var deck_mesh = MeshInstance3D.new()
+		var d_box = BoxMesh.new()
+		d_box.size = Vector3(1.0, 0.25, 0.4)
+		deck_mesh.mesh = d_box
+		deck_mesh.position = Vector3(0, 0.9, 0.45)
+		var deck_mat = StandardMaterial3D.new()
+		deck_mat.albedo_color = Color(0.15, 0.15, 0.2)
+		deck_mesh.material_override = deck_mat
+		cab_root.add_child(deck_mesh)
 
 		cab_root.position = Vector3(sin(angle) * radius, 0, -cos(angle) * radius)
 		cab_root.rotation.y = angle
