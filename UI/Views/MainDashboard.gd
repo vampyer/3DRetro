@@ -235,20 +235,11 @@ func _initialize_ui_components() -> void:
 	_game_grid_2d.game_selected.connect(_on_game_selected)
 	_grid_container.add_child(_game_grid_2d)
 
-	_viewport_container = SubViewportContainer.new()
-	_viewport_container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_viewport_container.stretch = true
-	_viewport_container.visible = false
-	_grid_container.add_child(_viewport_container)
-
-	var viewport = SubViewport.new()
-	viewport.size = Vector2i(1280, 720)
-	_viewport_container.add_child(viewport)
-
 	_game_grid_3d = GameGrid3DScript.new()
 	_game_grid_3d.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_game_grid_3d.visible = false
 	_game_grid_3d.game_selected_3d.connect(_on_game_selected)
-	viewport.add_child(_game_grid_3d)
+	_grid_container.add_child(_game_grid_3d)
 
 	_couch_big_picture_view = CouchBigPictureViewScript.new()
 	_couch_big_picture_view.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -571,8 +562,7 @@ func _switch_interface_model(model_index: int) -> void:
 	_game_grid_2d.visible = (model_index == 0)
 	_couch_big_picture_view.visible = (model_index == 1)
 	_minimalist_list_view.visible = (model_index == 2)
-	if _viewport_container:
-		_viewport_container.visible = (model_index == 3)
+	_game_grid_3d.visible = (model_index == 3)
 
 func _on_sort_mode_changed(sort_index: int) -> void:
 	var sorted = _currently_displayed_games.duplicate()

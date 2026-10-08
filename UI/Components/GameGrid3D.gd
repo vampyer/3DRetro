@@ -43,7 +43,6 @@ func apply_theme_colors(colors: Dictionary) -> void:
 
 func _build_3d_scene() -> void:
 	_sub_viewport = SubViewport.new()
-	_sub_viewport.size = Vector2i(1280, 720)
 	_sub_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(_sub_viewport)
 
