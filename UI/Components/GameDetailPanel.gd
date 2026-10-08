@@ -28,6 +28,78 @@ func _init() -> void:
 	custom_minimum_size = Vector2(380, 0)
 	_build_ui()
 
+func apply_theme_colors(colors: Dictionary) -> void:
+	var accent = colors.get("accent", Color(0.0, 0.85, 0.95))
+	var sec_accent = colors.get("accent_secondary", Color(1.0, 0.82, 0.2))
+	var surface = colors.get("surface", Color(0.10, 0.11, 0.18, 0.92))
+	var text_col = colors.get("text", Color(1.0, 1.0, 1.0))
+	var border_col = colors.get("border_color", accent.darkened(0.5))
+
+	var panel_sb = StyleBoxFlat.new()
+	panel_sb.bg_color = surface
+	panel_sb.set_corner_radius_all(8)
+	panel_sb.border_width_left = 1
+	panel_sb.border_width_top = 1
+	panel_sb.border_width_right = 1
+	panel_sb.border_width_bottom = 1
+	panel_sb.border_color = border_col
+	add_theme_stylebox_override("panel", panel_sb)
+
+	if _title_lbl:
+		_title_lbl.add_theme_color_override("font_color", text_col)
+	if _platform_lbl:
+		_platform_lbl.modulate = accent
+	if _developer_lbl:
+		_developer_lbl.add_theme_color_override("font_color", text_col)
+	if _genre_rating_lbl:
+		_genre_rating_lbl.modulate = sec_accent
+	if _description_lbl:
+		_description_lbl.add_theme_color_override("default_color", text_col)
+	if _playtime_lbl:
+		_playtime_lbl.add_theme_color_override("font_color", text_col)
+	if _achievements_lbl:
+		_achievements_lbl.add_theme_color_override("font_color", text_col)
+
+	if _play_btn:
+		_play_btn.add_theme_color_override("font_color", Color(0.05, 0.05, 0.05) if accent.get_luminance() > 0.55 else Color(1, 1, 1))
+		var play_sb = StyleBoxFlat.new()
+		play_sb.bg_color = accent
+		play_sb.set_corner_radius_all(8)
+		play_sb.shadow_color = Color(accent.r, accent.g, accent.b, 0.6)
+		play_sb.shadow_size = 12
+		_play_btn.add_theme_stylebox_override("normal", play_sb)
+
+		var play_hover = StyleBoxFlat.new()
+		play_hover.bg_color = accent.lightened(0.18)
+		play_hover.set_corner_radius_all(8)
+		play_hover.shadow_color = Color(accent.r, accent.g, accent.b, 0.85)
+		play_hover.shadow_size = 16
+		_play_btn.add_theme_stylebox_override("hover", play_hover)
+
+	if _fav_btn:
+		_fav_btn.add_theme_color_override("font_color", text_col)
+		var fav_sb = StyleBoxFlat.new()
+		fav_sb.bg_color = surface.lightened(0.08)
+		fav_sb.border_width_left = 1
+		fav_sb.border_width_top = 1
+		fav_sb.border_width_right = 1
+		fav_sb.border_width_bottom = 1
+		fav_sb.border_color = sec_accent
+		fav_sb.set_corner_radius_all(6)
+		_fav_btn.add_theme_stylebox_override("normal", fav_sb)
+
+	if _meta_btn:
+		_meta_btn.add_theme_color_override("font_color", text_col)
+		var meta_sb = StyleBoxFlat.new()
+		meta_sb.bg_color = surface.lightened(0.08)
+		meta_sb.border_width_left = 1
+		meta_sb.border_width_top = 1
+		meta_sb.border_width_right = 1
+		meta_sb.border_width_bottom = 1
+		meta_sb.border_color = accent.darkened(0.3)
+		meta_sb.set_corner_radius_all(6)
+		_meta_btn.add_theme_stylebox_override("normal", meta_sb)
+
 func _build_ui() -> void:
 	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_top", 16)

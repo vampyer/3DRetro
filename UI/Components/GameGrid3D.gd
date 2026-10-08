@@ -14,6 +14,8 @@ var _spot_light: SpotLight3D
 var _games: Array = []
 var _selected_index: int = 0
 var _cabinet_nodes: Array = []
+var _current_accent: Color = Color(0.0, 0.9, 1.0)
+var _current_sec_accent: Color = Color(0.98, 0.2, 0.75)
 
 func _init() -> void:
 	custom_minimum_size = Vector2(800, 600)
@@ -21,6 +23,23 @@ func _init() -> void:
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	stretch = true
 	_build_3d_scene()
+
+func apply_theme_colors(colors: Dictionary) -> void:
+	_current_accent = colors.get("accent", Color(0.0, 0.9, 1.0))
+	_current_sec_accent = colors.get("accent_secondary", Color(0.98, 0.2, 0.75))
+
+	if _spot_light:
+		_spot_light.light_color = _current_accent
+
+	for cab_root in _cabinet_nodes:
+		if is_instance_valid(cab_root) and cab_root.get_child_count() >= 3:
+			var screen_mesh = cab_root.get_child(1)
+			if screen_mesh and screen_mesh.material_override:
+				screen_mesh.material_override.emission = _current_accent
+
+			var marquee_mesh = cab_root.get_child(2)
+			if marquee_mesh and marquee_mesh.material_override:
+				marquee_mesh.material_override.emission = _current_sec_accent
 
 func _build_3d_scene() -> void:
 	_sub_viewport = SubViewport.new()
@@ -60,7 +79,7 @@ func _build_3d_scene() -> void:
 	_spot_light.rotation_degrees = Vector3(-45, 0, 0)
 	_spot_light.spot_angle = 35.0
 	_spot_light.light_energy = 3.5
-	_spot_light.light_color = Color(0.0, 0.9, 1.0) # Cyberpunk Neon Cyan Spotlight
+	_spot_light.light_color = _current_accent
 	world.add_child(_spot_light)
 
 	_pivot_node = Node3D.new()
@@ -104,7 +123,7 @@ func set_games(games: Array) -> void:
 		var screen_mat = StandardMaterial3D.new()
 		screen_mat.albedo_color = Color(0.1, 0.6, 0.9)
 		screen_mat.emission_enabled = true
-		screen_mat.emission = Color(0.0, 0.75, 0.95)
+		screen_mat.emission = _current_accent
 		screen_mat.emission_energy_multiplier = 1.5
 		screen_mesh.material_override = screen_mat
 		cab_root.add_child(screen_mesh)
@@ -118,7 +137,7 @@ func set_games(games: Array) -> void:
 		var marquee_mat = StandardMaterial3D.new()
 		marquee_mat.albedo_color = Color(0.95, 0.2, 0.7)
 		marquee_mat.emission_enabled = true
-		marquee_mat.emission = Color(0.98, 0.2, 0.75)
+		marquee_mat.emission = _current_sec_accent
 		marquee_mat.emission_energy_multiplier = 2.0
 		marquee_mesh.material_override = marquee_mat
 		cab_root.add_child(marquee_mesh)

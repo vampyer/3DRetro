@@ -16,11 +16,28 @@ var _hero_platform_lbl: Label
 var _hero_synopsis_lbl: Label
 var _horizontal_row: HBoxContainer
 var _games: Array = []
+var _current_theme_colors: Dictionary = {}
 
 func _init() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_build_ui()
+
+func apply_theme_colors(colors: Dictionary) -> void:
+	_current_theme_colors = colors
+	var accent = colors.get("accent", Color(0.0, 0.85, 0.95))
+	var text_col = colors.get("text", Color(1.0, 1.0, 1.0))
+
+	if _hero_title_lbl:
+		_hero_title_lbl.add_theme_color_override("font_color", text_col)
+	if _hero_platform_lbl:
+		_hero_platform_lbl.modulate = accent
+	if _hero_synopsis_lbl:
+		_hero_synopsis_lbl.add_theme_color_override("font_color", text_col)
+
+	for card in _horizontal_row.get_children():
+		if card.has_method("apply_theme_colors"):
+			card.call("apply_theme_colors", colors)
 
 func _build_ui() -> void:
 	var main_stack = Control.new()
@@ -77,6 +94,8 @@ func set_games(games: Array) -> void:
 		var card = GameCardScript.new()
 		card.custom_minimum_size = Vector2(180, 240)
 		card.set_game_data(game)
+		if not _current_theme_colors.is_empty() and card.has_method("apply_theme_colors"):
+			card.call("apply_theme_colors", _current_theme_colors)
 		card.game_selected.connect(func(id):
 			_display_hero(game)
 			game_selected.emit(id)

@@ -10,6 +10,7 @@ const GameCardScript = preload("res://UI/Components/GameCard.gd")
 
 var _grid_container: HFlowContainer
 var _card_size: Vector2 = Vector2(180, 240)
+var _current_theme_colors: Dictionary = {}
 
 func _init() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -25,6 +26,12 @@ func _build_ui() -> void:
 	_grid_container.add_theme_constant_override("v_separation", 16)
 	add_child(_grid_container)
 
+func apply_theme_colors(colors: Dictionary) -> void:
+	_current_theme_colors = colors
+	for card in _grid_container.get_children():
+		if card.has_method("apply_theme_colors"):
+			card.call("apply_theme_colors", colors)
+
 func set_games(games: Array) -> void:
 	for child in _grid_container.get_children():
 		child.queue_free()
@@ -33,6 +40,8 @@ func set_games(games: Array) -> void:
 		var card = GameCardScript.new()
 		card.custom_minimum_size = _card_size
 		card.set_game_data(game)
+		if not _current_theme_colors.is_empty() and card.has_method("apply_theme_colors"):
+			card.call("apply_theme_colors", _current_theme_colors)
 		card.game_selected.connect(func(id): game_selected.emit(id))
 		card.launch_requested.connect(func(id): launch_requested.emit(id))
 		_grid_container.add_child(card)

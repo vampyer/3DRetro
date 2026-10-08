@@ -6,43 +6,51 @@ extends RefCounted
 enum UIThemeMode {
 	CYBERPUNK_DARK = 0,
 	SYNTHWAVE_RETRO = 1,
-	MODERN_CLEAN_DARK = 2,
-	CLEAN_LIGHT = 3
+	VAPORWAVE_MATRIX = 2,
+	NES_CRIMSON_GOLD = 3
 }
 
 static func get_theme_colors(mode: int) -> Dictionary:
 	match mode:
 		UIThemeMode.CYBERPUNK_DARK:
 			return {
-				"background": Color(0.05, 0.05, 0.09),
-				"surface": Color(0.10, 0.11, 0.18, 0.92),
-				"accent": Color(0.0, 0.90, 1.0), # Electric Cyan
-				"text": Color(0.95, 0.96, 1.0),
-				"secondary": Color(0.55, 0.60, 0.75)
+				"background": Color(0.04, 0.04, 0.08),
+				"surface": Color(0.08, 0.09, 0.16, 0.90),
+				"accent": Color(0.0, 0.92, 1.0), # Electric Cyan
+				"accent_secondary": Color(1.0, 0.0, 0.55), # Neon Pink
+				"text": Color(0.96, 0.97, 1.0),
+				"secondary": Color(0.55, 0.62, 0.78),
+				"border_color": Color(0.0, 0.92, 1.0, 0.4)
 			}
 		UIThemeMode.SYNTHWAVE_RETRO:
 			return {
-				"background": Color(0.09, 0.02, 0.15),
-				"surface": Color(0.18, 0.06, 0.28, 0.92),
-				"accent": Color(1.0, 0.16, 0.75), # Neon Magenta
-				"text": Color(1.0, 0.92, 0.97),
-				"secondary": Color(0.85, 0.45, 0.75)
+				"background": Color(0.08, 0.02, 0.12),
+				"surface": Color(0.14, 0.05, 0.22, 0.90),
+				"accent": Color(1.0, 0.08, 0.58), # Hot Magenta
+				"accent_secondary": Color(1.0, 0.67, 0.0), # Sunburst Gold
+				"text": Color(1.0, 0.94, 0.98),
+				"secondary": Color(0.82, 0.52, 0.78),
+				"border_color": Color(1.0, 0.08, 0.58, 0.4)
 			}
-		UIThemeMode.MODERN_CLEAN_DARK:
+		UIThemeMode.VAPORWAVE_MATRIX:
 			return {
-				"background": Color(0.06, 0.07, 0.10),
-				"surface": Color(0.12, 0.14, 0.20, 0.92),
-				"accent": Color(0.24, 0.55, 1.0), # Sapphire Blue
-				"text": Color(0.92, 0.94, 0.98),
-				"secondary": Color(0.55, 0.58, 0.68)
+				"background": Color(0.03, 0.07, 0.05),
+				"surface": Color(0.06, 0.12, 0.09, 0.90),
+				"accent": Color(0.0, 1.0, 0.62), # Electric Mint Emerald
+				"accent_secondary": Color(0.65, 1.0, 0.0), # Lime Neon
+				"text": Color(0.94, 1.0, 0.96),
+				"secondary": Color(0.52, 0.76, 0.64),
+				"border_color": Color(0.0, 1.0, 0.62, 0.4)
 			}
-		UIThemeMode.CLEAN_LIGHT:
+		UIThemeMode.NES_CRIMSON_GOLD:
 			return {
-				"background": Color(0.92, 0.94, 0.97),
-				"surface": Color(1.0, 1.0, 1.0, 0.95),
-				"accent": Color(0.08, 0.42, 0.92), # Cobalt Blue
-				"text": Color(0.08, 0.10, 0.16),
-				"secondary": Color(0.40, 0.45, 0.55)
+				"background": Color(0.08, 0.02, 0.03),
+				"surface": Color(0.15, 0.05, 0.08, 0.90),
+				"accent": Color(1.0, 0.84, 0.0), # Imperial Royal Gold
+				"accent_secondary": Color(1.0, 0.13, 0.31), # Ruby Crimson
+				"text": Color(1.0, 0.96, 0.88),
+				"secondary": Color(0.78, 0.66, 0.52),
+				"border_color": Color(1.0, 0.84, 0.0, 0.4)
 			}
 		_:
 			return get_theme_colors(UIThemeMode.CYBERPUNK_DARK)
@@ -53,18 +61,37 @@ static func generate_skin_background_texture(mode: int) -> Texture2D:
 
 	match mode:
 		UIThemeMode.CYBERPUNK_DARK:
-			grad.colors = PackedColorArray([Color(0.12, 0.08, 0.24), Color(0.03, 0.03, 0.07)])
-			grad.offsets = PackedFloat32Array([0.0, 1.0])
+			grad.colors = PackedColorArray([
+				Color(0.14, 0.08, 0.28), # Deep indigo center
+				Color(0.06, 0.04, 0.14),
+				Color(0.02, 0.02, 0.06)  # Dark midnight perimeter
+			])
+			grad.offsets = PackedFloat32Array([0.0, 0.55, 1.0])
+			fill_type = GradientTexture2D.FILL_RADIAL
 		UIThemeMode.SYNTHWAVE_RETRO:
-			grad.colors = PackedColorArray([Color(0.48, 0.06, 0.38), Color(0.10, 0.01, 0.18)])
-			grad.offsets = PackedFloat32Array([0.0, 1.0])
+			grad.colors = PackedColorArray([
+				Color(0.42, 0.04, 0.32), # Sunset Magenta upper center
+				Color(0.20, 0.02, 0.22), # Deep Outrun Violet
+				Color(0.05, 0.01, 0.10)  # Dark Synthwave Void
+			])
+			grad.offsets = PackedFloat32Array([0.0, 0.5, 1.0])
 			fill_type = GradientTexture2D.FILL_LINEAR
-		UIThemeMode.MODERN_CLEAN_DARK:
-			grad.colors = PackedColorArray([Color(0.15, 0.17, 0.25), Color(0.04, 0.05, 0.08)])
-			grad.offsets = PackedFloat32Array([0.0, 1.0])
-		UIThemeMode.CLEAN_LIGHT:
-			grad.colors = PackedColorArray([Color(0.98, 0.99, 1.0), Color(0.84, 0.88, 0.95)])
-			grad.offsets = PackedFloat32Array([0.0, 1.0])
+		UIThemeMode.VAPORWAVE_MATRIX:
+			grad.colors = PackedColorArray([
+				Color(0.04, 0.20, 0.14), # Mint Emerald Center Glow
+				Color(0.03, 0.09, 0.07),
+				Color(0.01, 0.03, 0.02)  # Obsidian Onyx Perimeter
+			])
+			grad.offsets = PackedFloat32Array([0.0, 0.6, 1.0])
+			fill_type = GradientTexture2D.FILL_RADIAL
+		UIThemeMode.NES_CRIMSON_GOLD:
+			grad.colors = PackedColorArray([
+				Color(0.28, 0.05, 0.09), # Rich Burgundy Crimson Center
+				Color(0.12, 0.03, 0.05),
+				Color(0.04, 0.01, 0.02)  # Dark Mahogany Perimeter
+			])
+			grad.offsets = PackedFloat32Array([0.0, 0.5, 1.0])
+			fill_type = GradientTexture2D.FILL_RADIAL
 
 	var tex = GradientTexture2D.new()
 	tex.gradient = grad
@@ -80,6 +107,12 @@ static func apply_theme(target: Node, mode: int) -> void:
 	_recursive_apply_colors(target, colors)
 
 static func _recursive_apply_colors(node: Node, colors: Dictionary) -> void:
+	if node.has_method("apply_theme_colors"):
+		node.call("apply_theme_colors", colors)
+		for child in node.get_children():
+			_recursive_apply_colors(child, colors)
+		return
+
 	if node is PanelContainer or node is Panel:
 		var sb = StyleBoxFlat.new()
 		sb.bg_color = colors["surface"]
@@ -88,21 +121,30 @@ static func _recursive_apply_colors(node: Node, colors: Dictionary) -> void:
 		sb.border_width_top = 1
 		sb.border_width_right = 1
 		sb.border_width_bottom = 1
-		sb.border_color = colors["accent"].darkened(0.5)
-		sb.shadow_color = Color(0, 0, 0, 0.3)
-		sb.shadow_size = 4
+		sb.border_color = colors["border_color"]
+		sb.shadow_color = Color(0, 0, 0, 0.4)
+		sb.shadow_size = 6
 		node.add_theme_stylebox_override("panel", sb)
 	elif node is Button:
 		node.add_theme_color_override("font_color", colors["text"])
 		node.add_theme_color_override("font_hover_color", colors["accent"])
+		node.add_theme_color_override("font_pressed_color", colors.get("accent_secondary", colors["accent"]))
 		var sb_norm = StyleBoxFlat.new()
 		sb_norm.bg_color = colors["surface"]
+		sb_norm.border_width_left = 1
+		sb_norm.border_width_top = 1
+		sb_norm.border_width_right = 1
+		sb_norm.border_width_bottom = 1
+		sb_norm.border_color = colors["border_color"]
 		sb_norm.set_corner_radius_all(6)
 		sb_norm.content_margin_left = 8
 		sb_norm.content_margin_right = 8
 		node.add_theme_stylebox_override("normal", sb_norm)
 		var sb_hover = StyleBoxFlat.new()
-		sb_hover.bg_color = colors["surface"].lightened(0.18)
+		sb_hover.bg_color = colors["surface"].lightened(0.15)
+		sb_hover.border_width_left = 1
+		sb_hover.border_width_top = 1
+		sb_hover.border_width_right = 1
 		sb_hover.border_width_bottom = 2
 		sb_hover.border_color = colors["accent"]
 		sb_hover.set_corner_radius_all(6)
@@ -114,6 +156,15 @@ static func _recursive_apply_colors(node: Node, colors: Dictionary) -> void:
 	elif node is LineEdit:
 		node.add_theme_color_override("font_color", colors["text"])
 		node.add_theme_color_override("placeholder_color", colors["secondary"])
+		var sb_le = StyleBoxFlat.new()
+		sb_le.bg_color = colors["surface"].darkened(0.2)
+		sb_le.border_width_left = 1
+		sb_le.border_width_top = 1
+		sb_le.border_width_right = 1
+		sb_le.border_width_bottom = 1
+		sb_le.border_color = colors["border_color"]
+		sb_le.set_corner_radius_all(6)
+		node.add_theme_stylebox_override("normal", sb_le)
 
 	for child in node.get_children():
 		_recursive_apply_colors(child, colors)

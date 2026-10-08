@@ -15,6 +15,25 @@ func _init() -> void:
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_build_ui()
 
+func apply_theme_colors(colors: Dictionary) -> void:
+	var accent = colors.get("accent", Color(0.0, 0.85, 0.95))
+	var surface = colors.get("surface", Color(0.1, 0.1, 0.15, 0.95))
+	var text_col = colors.get("text", Color(1.0, 1.0, 1.0))
+	var border_col = colors.get("border_color", accent.darkened(0.5))
+
+	if _tree:
+		_tree.add_theme_color_override("font_color", text_col)
+		_tree.add_theme_color_override("title_button_color", accent)
+		var sb = StyleBoxFlat.new()
+		sb.bg_color = surface
+		sb.border_width_left = 1
+		sb.border_width_top = 1
+		sb.border_width_right = 1
+		sb.border_width_bottom = 1
+		sb.border_color = border_col
+		sb.set_corner_radius_all(6)
+		_tree.add_theme_stylebox_override("panel", sb)
+
 func _build_ui() -> void:
 	_tree = Tree.new()
 	_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL

@@ -67,10 +67,10 @@ func _ready() -> void:
 	theme_label.text = "Theme:"
 	_theme_selector = OptionButton.new()
 	_theme_selector.focus_mode = Control.FOCUS_ALL
-	_theme_selector.add_item("Cyberpunk Dark", 0)
-	_theme_selector.add_item("Synthwave Retro", 1)
-	_theme_selector.add_item("Modern Clean Dark", 2)
-	_theme_selector.add_item("Clean Light", 3)
+	_theme_selector.add_item("🔮 Cyberpunk Neon", 0)
+	_theme_selector.add_item("🌅 Synthwave Outrun", 1)
+	_theme_selector.add_item("🌲 Vaporwave Matrix", 2)
+	_theme_selector.add_item("👑 NES Crimson & Gold", 3)
 	_theme_selector.item_selected.connect(func(idx: int): ui_theme_mode_changed.emit(idx))
 	
 	_custom_color_button = Button.new()
@@ -99,3 +99,27 @@ func _ready() -> void:
 	_pad_status_label.text = "🎮 XInput Gamepad"
 	_pad_status_label.modulate = Color(0.2, 0.9, 0.4)
 	add_child(_pad_status_label)
+
+func apply_theme_colors(colors: Dictionary) -> void:
+	var accent = colors.get("accent", Color(0.0, 0.85, 0.95))
+	var text_col = colors.get("text", Color(1.0, 1.0, 1.0))
+	var surface = colors.get("surface", Color(0.1, 0.1, 0.15))
+	var border_col = colors.get("border_color", accent.darkened(0.5))
+
+	for child in get_children():
+		if child is Label and child != _pad_status_label:
+			child.add_theme_color_override("font_color", text_col)
+		elif child is OptionButton or child is Button:
+			child.add_theme_color_override("font_color", text_col)
+			child.add_theme_color_override("font_hover_color", accent)
+			var sb = StyleBoxFlat.new()
+			sb.bg_color = surface
+			sb.border_width_left = 1
+			sb.border_width_top = 1
+			sb.border_width_right = 1
+			sb.border_width_bottom = 1
+			sb.border_color = border_col
+			sb.set_corner_radius_all(6)
+			sb.content_margin_left = 8
+			sb.content_margin_right = 8
+			child.add_theme_stylebox_override("normal", sb)

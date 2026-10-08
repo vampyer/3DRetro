@@ -45,6 +45,52 @@ func _setup_styles() -> void:
 
 	add_theme_stylebox_override("panel", _normal_style)
 
+func apply_theme_colors(colors: Dictionary) -> void:
+	var surface = colors.get("surface", Color(0.12, 0.12, 0.18, 0.95))
+	var accent = colors.get("accent", Color(0.0, 0.85, 0.95))
+	var sec_accent = colors.get("accent_secondary", Color(1.0, 0.82, 0.2))
+	var text_col = colors.get("text", Color(1.0, 1.0, 1.0))
+
+	_normal_style = StyleBoxFlat.new()
+	_normal_style.bg_color = surface
+	_normal_style.set_corner_radius_all(8)
+	_normal_style.border_width_left = 1
+	_normal_style.border_width_top = 1
+	_normal_style.border_width_right = 1
+	_normal_style.border_width_bottom = 1
+	_normal_style.border_color = colors.get("border_color", accent.darkened(0.5))
+
+	_focus_style = StyleBoxFlat.new()
+	_focus_style.bg_color = surface.lightened(0.12)
+	_focus_style.set_corner_radius_all(8)
+	_focus_style.border_width_left = 2
+	_focus_style.border_width_top = 2
+	_focus_style.border_width_right = 2
+	_focus_style.border_width_bottom = 2
+	_focus_style.border_color = accent
+	_focus_style.shadow_color = Color(accent.r, accent.g, accent.b, 0.5)
+	_focus_style.shadow_size = 10
+
+	add_theme_stylebox_override("panel", _focus_style if has_focus() else _normal_style)
+
+	if _title_label:
+		_title_label.add_theme_color_override("font_color", text_col)
+	if _subtitle_label:
+		_subtitle_label.modulate = sec_accent
+	if _platform_badge:
+		var badge_sb = StyleBoxFlat.new()
+		badge_sb.bg_color = surface.darkened(0.3)
+		badge_sb.border_width_left = 1
+		badge_sb.border_width_top = 1
+		badge_sb.border_width_right = 1
+		badge_sb.border_width_bottom = 1
+		badge_sb.border_color = accent.darkened(0.3)
+		badge_sb.set_corner_radius_all(4)
+		badge_sb.content_margin_left = 6
+		badge_sb.content_margin_right = 6
+		_platform_badge.add_theme_stylebox_override("normal", badge_sb)
+		_platform_badge.add_theme_color_override("font_color", text_col)
+
 func _build_ui() -> void:
 	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 6)
