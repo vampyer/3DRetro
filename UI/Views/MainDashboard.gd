@@ -14,7 +14,6 @@ const LogoBannerScript = preload("res://UI/Components/LogoBanner.gd")
 const SortingControlBarScript = preload("res://UI/Components/SortingControlBar.gd")
 const SidebarCategoryNavScript = preload("res://UI/Components/SidebarCategoryNav.gd")
 const VirtualGameGridScript = preload("res://UI/Components/VirtualGameGrid.gd")
-const GameGrid3DScript = preload("res://UI/Components/GameGrid3D.gd")
 const CouchBigPictureViewScript = preload("res://UI/Components/CouchBigPictureView.gd")
 const MinimalistListViewScript = preload("res://UI/Components/MinimalistListView.gd")
 const GameDetailPanelScript = preload("res://UI/Components/GameDetailPanel.gd")
@@ -32,7 +31,6 @@ var _sorting_bar
 
 var _sidebar_nav
 var _game_grid_2d
-var _game_grid_3d
 var _viewport_container: SubViewportContainer
 var _couch_big_picture_view
 var _minimalist_list_view
@@ -98,11 +96,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			_on_menu_open_about_requested()
 	elif event is InputEventJoypadButton and event.pressed:
 		if event.button_index == JOY_BUTTON_LEFT_SHOULDER:
-			var prev_model = (_current_interface_model - 1 + 4) % 4
+			var prev_model = (_current_interface_model - 1 + 3) % 3
 			_interface_model_selector.selected = prev_model
 			_switch_interface_model(prev_model)
 		elif event.button_index == JOY_BUTTON_RIGHT_SHOULDER:
-			var next_model = (_current_interface_model + 1) % 4
+			var next_model = (_current_interface_model + 1) % 3
 			_interface_model_selector.selected = next_model
 			_switch_interface_model(next_model)
 		elif event.button_index == JOY_BUTTON_Y:
@@ -199,7 +197,6 @@ func _initialize_ui_components() -> void:
 	_interface_model_selector.add_item("🖥️ Classic 3-Column Desktop", 0)
 	_interface_model_selector.add_item("📺 Couch Big Picture TV", 1)
 	_interface_model_selector.add_item("📋 Minimalist Compact List", 2)
-	_interface_model_selector.add_item("🎲 3D Arcade Carousel", 3)
 	_interface_model_selector.item_selected.connect(_switch_interface_model)
 	status_container.add_child(_interface_model_selector)
 
@@ -234,12 +231,6 @@ func _initialize_ui_components() -> void:
 	_game_grid_2d.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_game_grid_2d.game_selected.connect(_on_game_selected)
 	_grid_container.add_child(_game_grid_2d)
-
-	_game_grid_3d = GameGrid3DScript.new()
-	_game_grid_3d.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_game_grid_3d.visible = false
-	_game_grid_3d.game_selected_3d.connect(_on_game_selected)
-	_grid_container.add_child(_game_grid_3d)
 
 	_couch_big_picture_view = CouchBigPictureViewScript.new()
 	_couch_big_picture_view.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -550,19 +541,17 @@ func _load_and_scan_games() -> void:
 func _update_displayed_list(list: Array) -> void:
 	_currently_displayed_games = list
 	_game_grid_2d.set_games(list)
-	_game_grid_3d.set_games(list)
 	_couch_big_picture_view.set_games(list)
 	_minimalist_list_view.set_games(list)
 
 func _switch_interface_model(model_index: int) -> void:
 	_current_interface_model = model_index
 	_sidebar_nav.visible = true
-	_detail_panel.visible = (model_index == 0 or model_index == 2 or model_index == 3)
+	_detail_panel.visible = (model_index == 0 or model_index == 2)
 	
 	_game_grid_2d.visible = (model_index == 0)
 	_couch_big_picture_view.visible = (model_index == 1)
 	_minimalist_list_view.visible = (model_index == 2)
-	_game_grid_3d.visible = (model_index == 3)
 
 func _on_sort_mode_changed(sort_index: int) -> void:
 	var sorted = _currently_displayed_games.duplicate()
