@@ -21,6 +21,7 @@ const EmulatorSelectionModalScript = preload("res://UI/Components/EmulatorSelect
 const ColorPickerModalScript = preload("res://UI/Components/ColorPickerModal.gd")
 const SystemConfigModalScript = preload("res://UI/Components/SystemConfigModal.gd")
 
+var _background_rect: TextureRect
 var _top_menu_bar
 var _download_progress_bar: ProgressBar
 var _status_label: Label
@@ -59,7 +60,7 @@ func _ready() -> void:
 	_initialize_services()
 	_initialize_ui_components()
 	_load_and_scan_games()
-	_on_theme_changed(0) # Apply initial default skin theme
+	_on_theme_changed(0) # Apply initial default skin theme & backdrop texture
 
 func _initialize_services() -> void:
 	_db = DatabaseContextScript.new()
@@ -72,6 +73,14 @@ func _initialize_services() -> void:
 	add_child(_bgm_player)
 
 func _initialize_ui_components() -> void:
+	# Full-Screen Skin Background Texture Canvas
+	_background_rect = TextureRect.new()
+	_background_rect.anchor_right = 1.0
+	_background_rect.anchor_bottom = 1.0
+	_background_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_background_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	add_child(_background_rect)
+
 	var root_vbox = VBoxContainer.new()
 	root_vbox.anchor_right = 1.0
 	root_vbox.anchor_bottom = 1.0
@@ -519,6 +528,8 @@ func _on_card_density_changed(density_index: int) -> void:
 	_game_grid_2d.set_card_size(size)
 
 func _on_theme_changed(theme_index: int) -> void:
+	if _background_rect:
+		_background_rect.texture = ThemeManagerScript.generate_skin_background_texture(theme_index)
 	ThemeManagerScript.apply_theme(self, theme_index)
 
 func _on_custom_color_picker_requested() -> void:
