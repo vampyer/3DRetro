@@ -1,6 +1,10 @@
 # Godot engine artifacts
 .godot/
 *.translation
+*.uid
+*.import
+build/
+*.old
 
 # Visual Studio & .NET build artifacts
 .vs/

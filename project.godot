@@ -16,7 +16,8 @@ config/icon="res://icon.png"
 
 [dotnet]
 
-project/assembly_name="EmulationMenu"
+project/assembly_name="3DRetro"
+
 
 [display]
 
