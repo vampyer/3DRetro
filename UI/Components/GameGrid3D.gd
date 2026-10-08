@@ -16,6 +16,7 @@ var _selected_index: int = 0
 var _cabinet_nodes: Array = []
 var _current_accent: Color = Color(0.0, 0.9, 1.0)
 var _current_sec_accent: Color = Color(0.98, 0.2, 0.75)
+var _environment: Environment
 
 func _init() -> void:
 	custom_minimum_size = Vector2(800, 600)
@@ -23,8 +24,6 @@ func _init() -> void:
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	stretch = true
 	_build_3d_scene()
-
-var _environment: Environment
 
 func apply_theme_colors(colors: Dictionary) -> void:
 	_current_accent = colors.get("accent", Color(0.0, 0.9, 1.0))
@@ -38,11 +37,7 @@ func apply_theme_colors(colors: Dictionary) -> void:
 		_spot_light.light_color = _current_accent
 
 	for cab_root in _cabinet_nodes:
-		if is_instance_valid(cab_root) and cab_root.get_child_count() >= 4:
-			var screen_mesh = cab_root.get_child(1)
-			if screen_mesh and screen_mesh.material_override:
-				screen_mesh.material_override.emission = _current_accent
-
+		if is_instance_valid(cab_root) and cab_root.get_child_count() >= 3:
 			var marquee_mesh = cab_root.get_child(2)
 			if marquee_mesh and marquee_mesh.material_override:
 				marquee_mesh.material_override.emission = _current_sec_accent
@@ -70,7 +65,7 @@ func _build_3d_scene() -> void:
 	_camera.keep_aspect = Camera3D.KEEP_WIDTH
 	_camera.fov = 60.0
 	world.add_child(_camera)
-	_camera.look_at_from_position(Vector3(0, 1.35, 2.6), Vector3(0, 1.0, 0))
+	_camera.look_at_from_position(Vector3(0, 1.15, 2.2), Vector3(0, 0.9, 0))
 
 	# 1. Reflective Floor Plane
 	var floor_mesh = MeshInstance3D.new()
@@ -93,7 +88,7 @@ func _build_3d_scene() -> void:
 	world.add_child(dir_light)
 
 	_spot_light = SpotLight3D.new()
-	_spot_light.position = Vector3(0, 3.8, 2.2)
+	_spot_light.position = Vector3(0, 3.2, 1.8)
 	_spot_light.rotation_degrees = Vector3(-40, 0, 0)
 	_spot_light.spot_angle = 45.0
 	_spot_light.light_energy = 4.0
@@ -114,19 +109,20 @@ func set_games(games: Array) -> void:
 	if count == 0:
 		return
 
-	var radius = 2.2
+	var radius = 1.8
 	var step_angle = (2.0 * PI) / max(count, 8)
 
 	for i in range(count):
+		var game = games[i]
 		var angle = i * step_angle
 		var cab_root = Node3D.new()
 
-		# Arcade Cabinet Body
+		# Arcade Cabinet Body (Smaller Compact Dimensions)
 		var body_mesh = MeshInstance3D.new()
 		var box = BoxMesh.new()
-		box.size = Vector3(1.1, 2.0, 0.8)
+		box.size = Vector3(0.85, 1.55, 0.65)
 		body_mesh.mesh = box
-		body_mesh.position = Vector3(0, 1.0, 0)
+		body_mesh.position = Vector3(0, 0.775, 0)
 		var body_mat = StandardMaterial3D.new()
 		body_mat.albedo_color = Color(0.08, 0.08, 0.12)
 		body_mat.metallic = 0.7
@@ -134,26 +130,39 @@ func set_games(games: Array) -> void:
 		body_mesh.material_override = body_mat
 		cab_root.add_child(body_mesh)
 
-		# Glowing Game Screen
+		# Game Cover Art Screen Card
 		var screen_mesh = MeshInstance3D.new()
 		var s_box = BoxMesh.new()
-		s_box.size = Vector3(0.95, 0.75, 0.05)
+		s_box.size = Vector3(0.74, 0.58, 0.04)
 		screen_mesh.mesh = s_box
-		screen_mesh.position = Vector3(0, 1.35, 0.41)
+		screen_mesh.position = Vector3(0, 1.05, 0.33)
 		var screen_mat = StandardMaterial3D.new()
-		screen_mat.albedo_color = Color(0.1, 0.6, 0.95)
-		screen_mat.emission_enabled = true
-		screen_mat.emission = _current_accent
-		screen_mat.emission_energy_multiplier = 2.0
+		
+		var art_path = game.get("cover_art", "")
+		if art_path != "" and FileAccess.file_exists(art_path):
+			var img = Image.load_from_file(art_path)
+			if img:
+				var tex = ImageTexture.create_from_image(img)
+				screen_mat.albedo_texture = tex
+				screen_mat.albedo_color = Color.WHITE
+				screen_mat.emission_enabled = true
+				screen_mat.emission_texture = tex
+				screen_mat.emission_energy_multiplier = 0.4
+		else:
+			screen_mat.albedo_color = Color(0.1, 0.6, 0.95)
+			screen_mat.emission_enabled = true
+			screen_mat.emission = _current_accent
+			screen_mat.emission_energy_multiplier = 1.5
+
 		screen_mesh.material_override = screen_mat
 		cab_root.add_child(screen_mesh)
 
 		# Glowing Marquee Header Banner
 		var marquee_mesh = MeshInstance3D.new()
 		var m_box = BoxMesh.new()
-		m_box.size = Vector3(1.02, 0.35, 0.12)
+		m_box.size = Vector3(0.79, 0.27, 0.10)
 		marquee_mesh.mesh = m_box
-		marquee_mesh.position = Vector3(0, 1.85, 0.41)
+		marquee_mesh.position = Vector3(0, 1.43, 0.33)
 		var marquee_mat = StandardMaterial3D.new()
 		marquee_mat.albedo_color = Color(0.95, 0.2, 0.75)
 		marquee_mat.emission_enabled = true
@@ -165,9 +174,9 @@ func set_games(games: Array) -> void:
 		# Control Panel Deck
 		var deck_mesh = MeshInstance3D.new()
 		var d_box = BoxMesh.new()
-		d_box.size = Vector3(1.0, 0.25, 0.4)
+		d_box.size = Vector3(0.77, 0.19, 0.31)
 		deck_mesh.mesh = d_box
-		deck_mesh.position = Vector3(0, 0.9, 0.45)
+		deck_mesh.position = Vector3(0, 0.70, 0.36)
 		var deck_mat = StandardMaterial3D.new()
 		deck_mat.albedo_color = Color(0.15, 0.15, 0.2)
 		deck_mesh.material_override = deck_mat
