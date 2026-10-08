@@ -21,8 +21,13 @@ func _init() -> void:
 	custom_minimum_size = Vector2(800, 600)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
-	stretch = true
+	stretch = false
 	_build_3d_scene()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		if _sub_viewport and size.x > 0 and size.y > 0:
+			_sub_viewport.size = Vector2i(int(size.x), int(size.y))
 
 func apply_theme_colors(colors: Dictionary) -> void:
 	_current_accent = colors.get("accent", Color(0.0, 0.9, 1.0))
@@ -43,7 +48,9 @@ func apply_theme_colors(colors: Dictionary) -> void:
 
 func _build_3d_scene() -> void:
 	_sub_viewport = SubViewport.new()
+	_sub_viewport.size = Vector2i(1920, 1080)
 	_sub_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	_sub_viewport.handle_input_locally = true
 	add_child(_sub_viewport)
 
 	var world = Node3D.new()
