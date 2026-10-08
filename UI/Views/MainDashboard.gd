@@ -62,6 +62,15 @@ func _ready() -> void:
 	_initialize_ui_components()
 	_load_and_scan_games()
 	_on_theme_changed(0) # Apply initial default skin theme & backdrop texture
+	get_tree().create_timer(0.3).timeout.connect(func():
+		for t in range(4):
+			_on_theme_changed(t)
+			await get_tree().process_frame
+			await get_tree().process_frame
+			var img = get_viewport().get_texture().get_image()
+			img.save_png("d:/Emulation-menu/diag_skin_" + str(t) + ".png")
+		_on_theme_changed(0)
+	)
 
 func _initialize_services() -> void:
 	_db = DatabaseContextScript.new()
@@ -522,7 +531,7 @@ func _update_displayed_list(list: Array) -> void:
 
 func _switch_interface_model(model_index: int) -> void:
 	_current_interface_model = model_index
-	_sidebar_nav.visible = (model_index == 0 or model_index == 2)
+	_sidebar_nav.visible = true
 	_detail_panel.visible = (model_index == 0 or model_index == 2 or model_index == 3)
 	
 	_game_grid_2d.visible = (model_index == 0)

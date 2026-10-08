@@ -15,42 +15,42 @@ static func get_theme_colors(mode: int) -> Dictionary:
 		UIThemeMode.CYBERPUNK_DARK:
 			return {
 				"background": Color(0.04, 0.04, 0.08),
-				"surface": Color(0.08, 0.09, 0.16, 0.90),
+				"surface": Color(0.07, 0.08, 0.16, 0.98),
 				"accent": Color(0.0, 0.92, 1.0), # Electric Cyan
 				"accent_secondary": Color(1.0, 0.0, 0.55), # Neon Pink
 				"text": Color(0.96, 0.97, 1.0),
 				"secondary": Color(0.55, 0.62, 0.78),
-				"border_color": Color(0.0, 0.92, 1.0, 0.4)
+				"border_color": Color(0.0, 0.92, 1.0, 0.85)
 			}
 		UIThemeMode.SYNTHWAVE_RETRO:
 			return {
 				"background": Color(0.08, 0.02, 0.12),
-				"surface": Color(0.14, 0.05, 0.22, 0.90),
+				"surface": Color(0.10, 0.03, 0.16, 0.98),
 				"accent": Color(1.0, 0.08, 0.58), # Hot Magenta
 				"accent_secondary": Color(1.0, 0.67, 0.0), # Sunburst Gold
 				"text": Color(1.0, 0.94, 0.98),
 				"secondary": Color(0.82, 0.52, 0.78),
-				"border_color": Color(1.0, 0.08, 0.58, 0.4)
+				"border_color": Color(1.0, 0.08, 0.58, 0.85)
 			}
 		UIThemeMode.VAPORWAVE_MATRIX:
 			return {
 				"background": Color(0.03, 0.07, 0.05),
-				"surface": Color(0.06, 0.12, 0.09, 0.90),
+				"surface": Color(0.04, 0.09, 0.07, 0.98),
 				"accent": Color(0.0, 1.0, 0.62), # Electric Mint Emerald
 				"accent_secondary": Color(0.65, 1.0, 0.0), # Lime Neon
 				"text": Color(0.94, 1.0, 0.96),
 				"secondary": Color(0.52, 0.76, 0.64),
-				"border_color": Color(0.0, 1.0, 0.62, 0.4)
+				"border_color": Color(0.0, 1.0, 0.62, 0.85)
 			}
 		UIThemeMode.NES_CRIMSON_GOLD:
 			return {
 				"background": Color(0.08, 0.02, 0.03),
-				"surface": Color(0.15, 0.05, 0.08, 0.90),
+				"surface": Color(0.11, 0.03, 0.05, 0.98),
 				"accent": Color(1.0, 0.84, 0.0), # Imperial Royal Gold
 				"accent_secondary": Color(1.0, 0.13, 0.31), # Ruby Crimson
 				"text": Color(1.0, 0.96, 0.88),
 				"secondary": Color(0.78, 0.66, 0.52),
-				"border_color": Color(1.0, 0.84, 0.0, 0.4)
+				"border_color": Color(1.0, 0.84, 0.0, 0.85)
 			}
 		_:
 			return get_theme_colors(UIThemeMode.CYBERPUNK_DARK)
