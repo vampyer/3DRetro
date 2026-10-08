@@ -17,7 +17,7 @@ var _normal_style: StyleBoxFlat
 var _focus_style: StyleBoxFlat
 
 func _init() -> void:
-	custom_minimum_size = Vector2(180, 245)
+	custom_minimum_size = Vector2(145, 195)
 	focus_mode = Control.FOCUS_ALL
 	_setup_styles()
 	_build_ui()
@@ -104,7 +104,8 @@ func _build_ui() -> void:
 	margin.add_child(vbox)
 
 	var cover_stack = Control.new()
-	cover_stack.custom_minimum_size = Vector2(168, 175)
+	cover_stack.custom_minimum_size = Vector2(133, 135)
+	cover_stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(cover_stack)
 
 	_cover_rect = TextureRect.new()
@@ -144,7 +145,7 @@ func _build_ui() -> void:
 	# Title & Metadata Info
 	_title_label = Label.new()
 	_title_label.text = "Game Title"
-	_title_label.add_theme_font_size_override("font_size", 13)
+	_title_label.add_theme_font_size_override("font_size", 12)
 	_title_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_child(_title_label)
@@ -200,8 +201,8 @@ func _generate_procedural_box_art(title: String, plat: String) -> Texture2D:
 	tex.gradient = grad
 	tex.fill_from = Vector2(0, 0)
 	tex.fill_to = Vector2(1, 1)
-	tex.width = 168
-	tex.height = 175
+	tex.width = 133
+	tex.height = 135
 	return tex
 
 func _on_focus_entered() -> void:

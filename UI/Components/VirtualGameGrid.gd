@@ -10,7 +10,7 @@ const GameCardScript = preload("res://UI/Components/GameCard.gd")
 
 var _grid_container: HFlowContainer
 var _margin: MarginContainer
-var _card_size: Vector2 = Vector2(180, 240)
+var _card_size: Vector2 = Vector2(145, 195)
 var _current_theme_colors: Dictionary = {}
 
 func _init() -> void:

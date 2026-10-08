@@ -577,10 +577,10 @@ func _on_sort_mode_changed(sort_index: int) -> void:
 func _on_card_density_changed(density_index: int) -> void:
 	var size: Vector2
 	match density_index:
-		0: size = Vector2(120, 160)
-		1: size = Vector2(180, 240)
-		2: size = Vector2(240, 320)
-		_: size = Vector2(180, 240)
+		0: size = Vector2(110, 150)
+		1: size = Vector2(145, 195)
+		2: size = Vector2(190, 255)
+		_: size = Vector2(145, 195)
 	_game_grid_2d.set_card_size(size)
 
 func _on_theme_changed(theme_index: int) -> void:

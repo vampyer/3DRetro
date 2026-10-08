@@ -53,9 +53,9 @@ func _ready() -> void:
 	density_label.text = "Grid Size:"
 	_density_selector = OptionButton.new()
 	_density_selector.focus_mode = Control.FOCUS_ALL
-	_density_selector.add_item("Small Cards (120x160)", CardDensity.SMALL)
-	_density_selector.add_item("Medium Cards (180x240)", CardDensity.MEDIUM)
-	_density_selector.add_item("Large Cards (240x320)", CardDensity.LARGE)
+	_density_selector.add_item("Small Cards (110x150)", CardDensity.SMALL)
+	_density_selector.add_item("Medium Cards (145x195)", CardDensity.MEDIUM)
+	_density_selector.add_item("Large Cards (190x255)", CardDensity.LARGE)
 	_density_selector.selected = CardDensity.MEDIUM
 	_density_selector.item_selected.connect(func(idx: int): card_density_changed.emit(idx))
 	

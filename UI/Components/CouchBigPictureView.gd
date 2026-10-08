@@ -103,7 +103,7 @@ func set_games(games: Array) -> void:
 
 	for game in games:
 		var card = GameCardScript.new()
-		card.custom_minimum_size = Vector2(180, 240)
+		card.custom_minimum_size = Vector2(145, 195)
 		card.set_game_data(game)
 		if not _current_theme_colors.is_empty() and card.has_method("apply_theme_colors"):
 			card.call("apply_theme_colors", _current_theme_colors)
