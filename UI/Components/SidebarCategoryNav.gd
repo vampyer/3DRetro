@@ -47,9 +47,11 @@ func apply_theme_colors(colors: Dictionary) -> void:
 		sb.set_corner_radius_all(6)
 		_search_box.add_theme_stylebox_override("normal", sb)
 
+	var header_color = accent.lightened(0.35)
 	for child in _button_container.get_children():
 		if child is Label:
-			child.modulate = accent
+			child.add_theme_color_override("font_color", header_color)
+			child.modulate = Color.WHITE
 		elif child is Button:
 			child.add_theme_color_override("font_color", text_col)
 			child.add_theme_color_override("font_hover_color", accent)
@@ -121,7 +123,7 @@ func _add_header(text_val: String) -> void:
 	var lbl = Label.new()
 	lbl.text = text_val
 	lbl.add_theme_font_size_override("font_size", 11)
-	lbl.modulate = _current_accent_color
+	lbl.add_theme_color_override("font_color", _current_accent_color.lightened(0.35))
 	_button_container.add_child(lbl)
 
 func _add_button(label: String, set_as_default: bool = false) -> void:

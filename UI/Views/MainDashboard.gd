@@ -554,6 +554,8 @@ func _on_theme_changed(theme_index: int) -> void:
 	if _background_rect:
 		_background_rect.texture = ThemeManagerScript.generate_skin_background_texture(theme_index)
 	ThemeManagerScript.apply_theme(self, theme_index)
+	if _sorting_bar and _sorting_bar.has_method("set_selected_theme"):
+		_sorting_bar.set_selected_theme(theme_index)
 
 func _on_custom_color_picker_requested() -> void:
 	var colors = ThemeManagerScript.get_theme_colors(0)

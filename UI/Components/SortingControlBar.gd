@@ -100,6 +100,10 @@ func _ready() -> void:
 	_pad_status_label.modulate = Color(0.2, 0.9, 0.4)
 	add_child(_pad_status_label)
 
+func set_selected_theme(theme_index: int) -> void:
+	if _theme_selector and theme_index >= 0 and theme_index < _theme_selector.item_count:
+		_theme_selector.selected = theme_index
+
 func apply_theme_colors(colors: Dictionary) -> void:
 	var accent = colors.get("accent", Color(0.0, 0.85, 0.95))
 	var text_col = colors.get("text", Color(1.0, 1.0, 1.0))
