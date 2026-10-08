@@ -1,0 +1,21 @@
+# Godot engine artifacts
+.godot/
+*.translation
+
+# Visual Studio & .NET build artifacts
+.vs/
+bin/
+obj/
+*.user
+*.userosv
+*.suo
+*.cache
+*.pdb
+
+# Local app runtime data & downloads
+App/Cache/
+App/Saves/
+App/Emulators/
+App/RetroArch/
+App/system_configs.json
+App/emulation_data.db
