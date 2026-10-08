@@ -9,6 +9,7 @@ const SystemConfigOverrideManagerScript = preload("res://Core/Services/SystemCon
 const ShaderPresetManagerScript = preload("res://UI/Services/ShaderPresetManager.gd")
 const ThemeManagerScript = preload("res://UI/Services/ThemeManager.gd")
 
+const TopAppMenuBarScript = preload("res://UI/Components/TopAppMenuBar.gd")
 const SortingControlBarScript = preload("res://UI/Components/SortingControlBar.gd")
 const SidebarCategoryNavScript = preload("res://UI/Components/SidebarCategoryNav.gd")
 const VirtualGameGridScript = preload("res://UI/Components/VirtualGameGrid.gd")
@@ -20,6 +21,7 @@ const EmulatorSelectionModalScript = preload("res://UI/Components/EmulatorSelect
 const ColorPickerModalScript = preload("res://UI/Components/ColorPickerModal.gd")
 const SystemConfigModalScript = preload("res://UI/Components/SystemConfigModal.gd")
 
+var _top_menu_bar
 var _download_progress_bar: ProgressBar
 var _status_label: Label
 var _interface_model_selector: OptionButton
@@ -36,6 +38,9 @@ var _selection_modal
 var _color_picker_modal
 var _system_config_modal
 var _grid_container: Control
+
+var _file_dialog: FileDialog
+var _about_dialog: AcceptDialog
 
 var _db
 var _rom_dir_manager
@@ -71,6 +76,22 @@ func _initialize_ui_components() -> void:
 	root_vbox.anchor_right = 1.0
 	root_vbox.anchor_bottom = 1.0
 	add_child(root_vbox)
+
+	# 0. Top Main Application Menu Bar (File, View, Tools, Help)
+	_top_menu_bar = TopAppMenuBarScript.new()
+	_top_menu_bar.load_file_requested.connect(_on_menu_open_file_requested)
+	_top_menu_bar.scan_dir_requested.connect(_on_menu_scan_dir_requested)
+	_top_menu_bar.export_db_requested.connect(_on_menu_export_db_requested)
+	_top_menu_bar.import_db_requested.connect(_on_menu_import_db_requested)
+	_top_menu_bar.exit_app_requested.connect(func(): get_tree().quit())
+	_top_menu_bar.view_model_selected.connect(func(idx): _interface_model_selector.selected = idx; _switch_interface_model(idx))
+	_top_menu_bar.toggle_fullscreen_requested.connect(_toggle_fullscreen)
+	_top_menu_bar.open_system_config_requested.connect(_on_system_config_requested)
+	_top_menu_bar.open_color_picker_requested.connect(_on_custom_color_picker_requested)
+	_top_menu_bar.toggle_bgm_requested.connect(_on_bgm_toggled)
+	_top_menu_bar.rescan_roms_requested.connect(_load_and_scan_games)
+	_top_menu_bar.open_about_requested.connect(_on_menu_open_about_requested)
+	root_vbox.add_child(_top_menu_bar)
 
 	# Header Bar
 	var status_container = HBoxContainer.new()
@@ -160,7 +181,17 @@ func _initialize_ui_components() -> void:
 	_detail_panel.metadata_download_requested.connect(_on_metadata_download_requested)
 	body_hbox.add_child(_detail_panel)
 
-	# Modals
+	# Dialogs & Modals
+	_file_dialog = FileDialog.new()
+	_file_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	_file_dialog.size = Vector2i(750, 500)
+	add_child(_file_dialog)
+
+	_about_dialog = AcceptDialog.new()
+	_about_dialog.title = "About 3DRetro Frontend"
+	_about_dialog.dialog_text = "🕹️ 3DRetro High-Performance Desktop Frontend v1.0.0\n\nBuilt on Standard Godot Engine 4.7 GDScript.\nFeatures 33 Emulated Systems, 4 Dynamic View Models, RetroBat System Configs, CRT Shaders, and Gamepad Autoconfig."
+	add_child(_about_dialog)
+
 	_selection_modal = EmulatorSelectionModalScript.new()
 	_selection_modal.mode_selected.connect(_on_emulator_mode_selected)
 	add_child(_selection_modal)
@@ -171,6 +202,134 @@ func _initialize_ui_components() -> void:
 
 	_system_config_modal = SystemConfigModalScript.new(_sys_config_manager)
 	add_child(_system_config_modal)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_F11:
+			_toggle_fullscreen()
+		elif event.is_action_pressed("ui_cancel"):
+			pass
+
+func _toggle_fullscreen() -> void:
+	var mode = DisplayServer.window_get_mode()
+	if mode == DisplayServer.WINDOW_MODE_FULLSCREEN or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	else:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+
+func _on_menu_open_file_requested() -> void:
+	_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	_file_dialog.filters = ["*.sfc, *.smc ; Super Nintendo", "*.nes ; Nintendo", "*.md, *.smd ; Genesis", "*.gba ; Game Boy Advance", "*.iso, *.chd ; Disc Images", "*.zip, *.7z ; ROM Archives", "*.* ; All Files"]
+	_file_dialog.title = "Open Single ROM File"
+	if _file_dialog.file_selected.is_connected(_on_file_dialog_rom_selected):
+		_file_dialog.file_selected.disconnect(_on_file_dialog_rom_selected)
+	_file_dialog.file_selected.connect(_on_file_dialog_rom_selected, CONNECT_ONE_SHOT)
+	_file_dialog.popup_centered()
+
+func _on_file_dialog_rom_selected(path: String) -> void:
+	var file_name = path.get_file()
+	var plat = "snes"
+	if path.ends_with(".nes"): plat = "nes"
+	elif path.ends_with(".md") or path.ends_with(".smd"): plat = "genesis"
+	elif path.ends_with(".gba"): plat = "gba"
+	elif path.ends_with(".iso") or path.ends_with(".chd"): plat = "ps1"
+	
+	var custom_game = {
+		"id": "custom_" + file_name,
+		"title": file_name.get_basename().capitalize(),
+		"platform": plat,
+		"file_path": path,
+		"developer": "User Loaded",
+		"release_year": 2026,
+		"genre": "Custom ROM",
+		"rating": 5.0,
+		"is_favorite": true,
+		"play_count": 1,
+		"total_play_time": 0,
+		"synopsis": "Directly loaded ROM file from path: " + path,
+		"max_players": 2
+	}
+	_db.save_game(custom_game)
+	_loaded_games[custom_game["id"]] = custom_game
+	_all_scanned_games.append(custom_game)
+	_update_displayed_list(_all_scanned_games)
+	_on_game_selected(custom_game["id"])
+	_on_game_launch_requested(custom_game["id"])
+
+func _on_menu_scan_dir_requested() -> void:
+	_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_DIR
+	_file_dialog.title = "Select Custom ROM Directory to Scan"
+	if _file_dialog.dir_selected.is_connected(_on_file_dialog_dir_selected):
+		_file_dialog.dir_selected.disconnect(_on_file_dialog_dir_selected)
+	_file_dialog.dir_selected.connect(_on_file_dialog_dir_selected, CONNECT_ONE_SHOT)
+	_file_dialog.popup_centered()
+
+func _on_file_dialog_dir_selected(dir_path: String) -> void:
+	_status_label.text = "Scanning custom directory: " + dir_path + "..."
+	var extensions = [".sfc", ".smc", ".nes", ".md", ".smd", ".gba", ".iso", ".zip", ".7z", ".chd", ".nsp", ".xci"]
+	var dir = DirAccess.open(dir_path)
+	if dir:
+		dir.list_dir_begin()
+		var file_name = dir.get_next()
+		var count = 0
+		while file_name != "":
+			if not dir.current_is_dir():
+				for ext in extensions:
+					if file_name.ends_with(ext):
+						var rom_data = {
+							"id": "dir_" + file_name,
+							"title": file_name.get_basename().capitalize(),
+							"platform": "custom",
+							"file_path": dir_path + "/" + file_name,
+							"developer": "Scanned ROM",
+							"release_year": 2000,
+							"genre": "Retro",
+							"rating": 4.5,
+							"is_favorite": false,
+							"play_count": 0,
+							"total_play_time": 0,
+							"synopsis": "Scanned from custom directory " + dir_path,
+							"max_players": 2
+						}
+						_db.save_game(rom_data)
+						_all_scanned_games.append(rom_data)
+						_loaded_games[rom_data["id"]] = rom_data
+						count += 1
+						break
+			file_name = dir.get_next()
+		dir.list_dir_end()
+		_status_label.text = "Scan complete. Added " + str(count) + " ROM files from " + dir_path
+		_update_displayed_list(_all_scanned_games)
+
+func _on_menu_export_db_requested() -> void:
+	_file_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+	_file_dialog.filters = ["*.json ; JSON Database"]
+	_file_dialog.title = "Export Library Database Backup"
+	if _file_dialog.file_selected.is_connected(_on_file_dialog_export_selected):
+		_file_dialog.file_selected.disconnect(_on_file_dialog_export_selected)
+	_file_dialog.file_selected.connect(_on_file_dialog_export_selected, CONNECT_ONE_SHOT)
+	_file_dialog.popup_centered()
+
+func _on_file_dialog_export_selected(path: String) -> void:
+	_db.save_database()
+	_status_label.text = "Exported library database backup to " + path
+
+func _on_menu_import_db_requested() -> void:
+	_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	_file_dialog.filters = ["*.json ; JSON Database"]
+	_file_dialog.title = "Import Library Database Backup"
+	if _file_dialog.file_selected.is_connected(_on_file_dialog_import_selected):
+		_file_dialog.file_selected.disconnect(_on_file_dialog_import_selected)
+	_file_dialog.file_selected.connect(_on_file_dialog_import_selected, CONNECT_ONE_SHOT)
+	_file_dialog.popup_centered()
+
+func _on_file_dialog_import_selected(path: String) -> void:
+	_db.load_database()
+	_load_and_scan_games()
+	_status_label.text = "Imported library database from " + path
+
+func _on_menu_open_about_requested() -> void:
+	_about_dialog.popup_centered()
 
 func _load_and_scan_games() -> void:
 	_status_label.text = "Scanning ROM directories..."
@@ -312,7 +471,7 @@ func _load_and_scan_games() -> void:
 				"is_favorite": true,
 				"play_count": 19,
 				"total_play_time": 480,
-				"synopsis": "Unite Kyogre and Groudon under Rayquaza's skies in the Hoenn region!",
+				"synopsis": "Unite Kyogre and Groudon under Rayquaza' skies in the Hoenn region!",
 				"max_players": 4
 			}
 		]
