@@ -2,15 +2,20 @@ class_name DatabaseContext
 extends RefCounted
 
 ## Local Database Context for standard Godot 4.7 GDScript.
-## Stores ROM metadata, favorites, playtime analytics, and custom collections.
+## Stores ROM metadata, favorites, playtime analytics, and custom collections in application root.
 
-var _db_path: String = "user://3dretro_database.json"
+var _db_path: String = ""
 var _games: Dictionary = {}
 
 func _init() -> void:
+	var base_dir = OS.get_executable_path().get_base_dir() if OS.has_feature("standalone") else ProjectSettings.globalize_path("res://")
+	_db_path = base_dir.path_join("3dretro_database.json")
 	load_database()
 
 func load_database() -> void:
+	if not FileAccess.file_exists(_db_path) and FileAccess.file_exists("user://3dretro_database.json"):
+		_db_path = "user://3dretro_database.json"
+		
 	if FileAccess.file_exists(_db_path):
 		var file = FileAccess.open(_db_path, FileAccess.READ)
 		if file:
