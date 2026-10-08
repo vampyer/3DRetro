@@ -25,7 +25,7 @@ var _meta_btn: Button
 var _current_game: Dictionary = {}
 
 func _init() -> void:
-	custom_minimum_size = Vector2(380, 0)
+	custom_minimum_size = Vector2(280, 0)
 	_build_ui()
 
 func apply_theme_colors(colors: Dictionary) -> void:

@@ -14,7 +14,7 @@ var _active_button: Button = null
 var _current_accent_color: Color = Color(0.0, 0.85, 0.95)
 
 func _init() -> void:
-	custom_minimum_size = Vector2(250, 0)
+	custom_minimum_size = Vector2(280, 0)
 	_build_ui()
 
 func apply_theme_colors(colors: Dictionary) -> void:

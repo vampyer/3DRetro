@@ -18,6 +18,13 @@ var _horizontal_row: HBoxContainer
 var _games: Array = []
 var _current_theme_colors: Dictionary = {}
 
+var _scroll_node: ScrollContainer
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		if _scroll_node and _horizontal_row:
+			_horizontal_row.custom_minimum_size.x = max(0, _scroll_node.size.x - 20)
+
 func _init() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -76,16 +83,16 @@ func _build_ui() -> void:
 	_hero_synopsis_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_hero_synopsis_lbl)
 
-	var scroll = ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(0, 260)
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vbox.add_child(scroll)
+	_scroll_node = ScrollContainer.new()
+	_scroll_node.custom_minimum_size = Vector2(0, 260)
+	_scroll_node.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_child(_scroll_node)
 
 	_horizontal_row = HBoxContainer.new()
 	_horizontal_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	_horizontal_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_horizontal_row.add_theme_constant_override("separation", 20)
-	scroll.add_child(_horizontal_row)
+	_scroll_node.add_child(_horizontal_row)
 
 func set_games(games: Array) -> void:
 	_games = games

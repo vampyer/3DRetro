@@ -9,6 +9,7 @@ signal launch_requested(game_id: String)
 const GameCardScript = preload("res://UI/Components/GameCard.gd")
 
 var _grid_container: HFlowContainer
+var _margin: MarginContainer
 var _card_size: Vector2 = Vector2(180, 240)
 var _current_theme_colors: Dictionary = {}
 
@@ -18,23 +19,33 @@ func _init() -> void:
 	horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_build_ui()
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		if _margin:
+			_margin.custom_minimum_size.x = max(0, size.x - 12)
+
 func _build_ui() -> void:
-	var margin = MarginContainer.new()
-	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	margin.add_theme_constant_override("margin_left", 20)
-	margin.add_theme_constant_override("margin_right", 20)
-	margin.add_theme_constant_override("margin_top", 16)
-	margin.add_theme_constant_override("margin_bottom", 16)
-	add_child(margin)
+	_margin = MarginContainer.new()
+	_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_margin.add_theme_constant_override("margin_left", 16)
+	_margin.add_theme_constant_override("margin_right", 16)
+	_margin.add_theme_constant_override("margin_top", 16)
+	_margin.add_theme_constant_override("margin_bottom", 16)
+	add_child(_margin)
+
+	var center_vbox = VBoxContainer.new()
+	center_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	center_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	center_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	_margin.add_child(center_vbox)
 
 	_grid_container = HFlowContainer.new()
 	_grid_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_grid_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_grid_container.alignment = HFlowContainer.ALIGNMENT_CENTER
 	_grid_container.add_theme_constant_override("h_separation", 16)
 	_grid_container.add_theme_constant_override("v_separation", 16)
-	margin.add_child(_grid_container)
+	center_vbox.add_child(_grid_container)
 
 func apply_theme_colors(colors: Dictionary) -> void:
 	_current_theme_colors = colors
