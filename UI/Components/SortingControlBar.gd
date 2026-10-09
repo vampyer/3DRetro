@@ -75,6 +75,10 @@ func _ready() -> void:
 	_theme_selector.add_item("🌅 Synthwave Outrun", 1)
 	_theme_selector.add_item("🌲 Vaporwave Matrix", 2)
 	_theme_selector.add_item("👑 NES Crimson & Gold", 3)
+	_theme_selector.add_item("🦇 RetroBat Carbon Dark", 4)
+	_theme_selector.add_item("🎮 Algero SNES Classic", 5)
+	_theme_selector.add_item("🕹️ NeoGeo Arcade Cabinet", 6)
+	_theme_selector.add_item("📟 Game Boy Pocket LCD", 7)
 	_theme_selector.item_selected.connect(func(idx: int): ui_theme_mode_changed.emit(idx))
 	
 	_custom_color_button = Button.new()

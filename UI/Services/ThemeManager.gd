@@ -1,13 +1,17 @@
 class_name ThemeManager
 extends RefCounted
 
-## Theme & Skin Manager Service with High-Fidelity UI Styling & Procedural Wallpapers for Godot 4.7 Standard GDScript.
+## Theme & Skin Manager Service with High-Fidelity RetroBat & EmulationStation UI Styling for Godot 4.7 Standard GDScript.
 
 enum UIThemeMode {
 	CYBERPUNK_DARK = 0,
 	SYNTHWAVE_RETRO = 1,
 	VAPORWAVE_MATRIX = 2,
-	NES_CRIMSON_GOLD = 3
+	NES_CRIMSON_GOLD = 3,
+	RETROBAT_CARBON_DARK = 4,
+	ALGERO_SNES_CLASSIC = 5,
+	NEOGEO_ARCADE_CABINET = 6,
+	GAMEBOY_POCKET_MONOCHROME = 7
 }
 
 static func get_theme_colors(mode: int) -> Dictionary:
@@ -52,8 +56,48 @@ static func get_theme_colors(mode: int) -> Dictionary:
 				"secondary": Color(0.78, 0.66, 0.52),
 				"border_color": Color(1.0, 0.84, 0.0, 0.85)
 			}
+		UIThemeMode.RETROBAT_CARBON_DARK:
+			return {
+				"background": Color(0.06, 0.07, 0.09),
+				"surface": Color(0.10, 0.12, 0.15, 0.98),
+				"accent": Color(0.0, 0.82, 0.95), # RetroBat Electric Teal
+				"accent_secondary": Color(0.95, 0.35, 0.1), # Ember Orange
+				"text": Color(0.95, 0.96, 0.98),
+				"secondary": Color(0.58, 0.64, 0.72),
+				"border_color": Color(0.0, 0.82, 0.95, 0.85)
+			}
+		UIThemeMode.ALGERO_SNES_CLASSIC:
+			return {
+				"background": Color(0.82, 0.82, 0.84), # SNES Light Grey Shell
+				"surface": Color(0.90, 0.90, 0.92, 0.98), # Console Light Beige
+				"accent": Color(0.42, 0.28, 0.65), # SNES Purple
+				"accent_secondary": Color(0.85, 0.15, 0.25), # Nintendo Crimson
+				"text": Color(0.12, 0.12, 0.16), # Dark Slate Text
+				"secondary": Color(0.45, 0.45, 0.52),
+				"border_color": Color(0.42, 0.28, 0.65, 0.85)
+			}
+		UIThemeMode.NEOGEO_ARCADE_CABINET:
+			return {
+				"background": Color(0.08, 0.02, 0.02),
+				"surface": Color(0.14, 0.03, 0.04, 0.98),
+				"accent": Color(1.0, 0.78, 0.0), # NeoGeo Gold
+				"accent_secondary": Color(0.95, 0.15, 0.0), # Cabinet Red
+				"text": Color(1.0, 0.98, 0.92),
+				"secondary": Color(0.82, 0.65, 0.45),
+				"border_color": Color(1.0, 0.78, 0.0, 0.85)
+			}
+		UIThemeMode.GAMEBOY_POCKET_MONOCHROME:
+			return {
+				"background": Color(0.08, 0.12, 0.08), # LCD Dark Matrix
+				"surface": Color(0.12, 0.18, 0.12, 0.98),
+				"accent": Color(0.55, 0.78, 0.22), # Game Boy Olive Green
+				"accent_secondary": Color(0.85, 0.95, 0.45), # Bright Lime LCD
+				"text": Color(0.92, 0.98, 0.88),
+				"secondary": Color(0.58, 0.72, 0.52),
+				"border_color": Color(0.55, 0.78, 0.22, 0.85)
+			}
 		_:
-			return get_theme_colors(UIThemeMode.CYBERPUNK_DARK)
+			return get_theme_colors(UIThemeMode.RETROBAT_CARBON_DARK)
 
 static func generate_skin_background_texture(mode: int) -> Texture2D:
 	var grad = Gradient.new()
@@ -61,37 +105,30 @@ static func generate_skin_background_texture(mode: int) -> Texture2D:
 
 	match mode:
 		UIThemeMode.CYBERPUNK_DARK:
-			grad.colors = PackedColorArray([
-				Color(0.14, 0.08, 0.28), # Deep indigo center
-				Color(0.06, 0.04, 0.14),
-				Color(0.02, 0.02, 0.06)  # Dark midnight perimeter
-			])
+			grad.colors = PackedColorArray([Color(0.14, 0.08, 0.28), Color(0.06, 0.04, 0.14), Color(0.02, 0.02, 0.06)])
 			grad.offsets = PackedFloat32Array([0.0, 0.55, 1.0])
-			fill_type = GradientTexture2D.FILL_RADIAL
 		UIThemeMode.SYNTHWAVE_RETRO:
-			grad.colors = PackedColorArray([
-				Color(0.42, 0.04, 0.32), # Sunset Magenta upper center
-				Color(0.20, 0.02, 0.22), # Deep Outrun Violet
-				Color(0.05, 0.01, 0.10)  # Dark Synthwave Void
-			])
+			grad.colors = PackedColorArray([Color(0.42, 0.04, 0.32), Color(0.20, 0.02, 0.22), Color(0.05, 0.01, 0.10)])
 			grad.offsets = PackedFloat32Array([0.0, 0.5, 1.0])
 			fill_type = GradientTexture2D.FILL_LINEAR
 		UIThemeMode.VAPORWAVE_MATRIX:
-			grad.colors = PackedColorArray([
-				Color(0.04, 0.20, 0.14), # Mint Emerald Center Glow
-				Color(0.03, 0.09, 0.07),
-				Color(0.01, 0.03, 0.02)  # Obsidian Onyx Perimeter
-			])
+			grad.colors = PackedColorArray([Color(0.04, 0.20, 0.14), Color(0.03, 0.09, 0.07), Color(0.01, 0.03, 0.02)])
 			grad.offsets = PackedFloat32Array([0.0, 0.6, 1.0])
-			fill_type = GradientTexture2D.FILL_RADIAL
 		UIThemeMode.NES_CRIMSON_GOLD:
-			grad.colors = PackedColorArray([
-				Color(0.28, 0.05, 0.09), # Rich Burgundy Crimson Center
-				Color(0.12, 0.03, 0.05),
-				Color(0.04, 0.01, 0.02)  # Dark Mahogany Perimeter
-			])
+			grad.colors = PackedColorArray([Color(0.28, 0.05, 0.09), Color(0.12, 0.03, 0.05), Color(0.04, 0.01, 0.02)])
 			grad.offsets = PackedFloat32Array([0.0, 0.5, 1.0])
-			fill_type = GradientTexture2D.FILL_RADIAL
+		UIThemeMode.RETROBAT_CARBON_DARK:
+			grad.colors = PackedColorArray([Color(0.12, 0.14, 0.18), Color(0.06, 0.07, 0.09), Color(0.02, 0.03, 0.04)])
+			grad.offsets = PackedFloat32Array([0.0, 0.5, 1.0])
+		UIThemeMode.ALGERO_SNES_CLASSIC:
+			grad.colors = PackedColorArray([Color(0.92, 0.92, 0.94), Color(0.82, 0.82, 0.84), Color(0.72, 0.72, 0.75)])
+			grad.offsets = PackedFloat32Array([0.0, 0.6, 1.0])
+		UIThemeMode.NEOGEO_ARCADE_CABINET:
+			grad.colors = PackedColorArray([Color(0.22, 0.05, 0.06), Color(0.08, 0.02, 0.02), Color(0.02, 0.0, 0.01)])
+			grad.offsets = PackedFloat32Array([0.0, 0.55, 1.0])
+		UIThemeMode.GAMEBOY_POCKET_MONOCHROME:
+			grad.colors = PackedColorArray([Color(0.18, 0.25, 0.16), Color(0.08, 0.12, 0.08), Color(0.02, 0.04, 0.02)])
+			grad.offsets = PackedFloat32Array([0.0, 0.55, 1.0])
 
 	var tex = GradientTexture2D.new()
 	tex.gradient = grad
