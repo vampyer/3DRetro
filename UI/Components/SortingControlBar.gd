@@ -66,28 +66,7 @@ func _ready() -> void:
 	add_child(density_label)
 	add_child(_density_selector)
 
-	# 3. 4-Layer 3D Carousel Menu Controls
-	_carousel_layer_selector = OptionButton.new()
-	_carousel_layer_selector.focus_mode = Control.FOCUS_ALL
-	_carousel_layer_selector.add_item("🌀 3D Layer 1: Front Focus", 0)
-	_carousel_layer_selector.add_item("🌀 3D Layer 2: Upper Elevation", 1)
-	_carousel_layer_selector.add_item("🌀 3D Layer 3: Lower Elevation", 2)
-	_carousel_layer_selector.add_item("🌀 3D Layer 4: Background Depth", 3)
-	_carousel_layer_selector.item_selected.connect(func(idx: int): carousel_layer_changed.emit(idx))
-	_carousel_layer_selector.visible = false
-	add_child(_carousel_layer_selector)
-
-	_carousel_spacing_selector = OptionButton.new()
-	_carousel_spacing_selector.focus_mode = Control.FOCUS_ALL
-	_carousel_spacing_selector.add_item("📐 3D Spacing: Compact", 0)
-	_carousel_spacing_selector.add_item("📐 3D Spacing: Normal", 1)
-	_carousel_spacing_selector.add_item("📐 3D Spacing: Expanded", 2)
-	_carousel_spacing_selector.selected = 1
-	_carousel_spacing_selector.item_selected.connect(func(idx: int): carousel_spacing_changed.emit(idx))
-	_carousel_spacing_selector.visible = false
-	add_child(_carousel_spacing_selector)
-
-	# 4. Theme Selector & Custom Colors
+	# 3. Theme Selector & Custom Colors
 	var theme_label = Label.new()
 	theme_label.text = "Theme:"
 	_theme_selector = OptionButton.new()
@@ -107,7 +86,7 @@ func _ready() -> void:
 	add_child(_theme_selector)
 	add_child(_custom_color_button)
 	
-	# 5. System Overrides & BGM
+	# 4. System Overrides & BGM
 	_sys_config_button = Button.new()
 	_sys_config_button.text = "⚙️ System Overrides..."
 	_sys_config_button.focus_mode = Control.FOCUS_ALL
@@ -125,10 +104,8 @@ func _ready() -> void:
 	_pad_status_label.modulate = Color(0.2, 0.9, 0.4)
 	add_child(_pad_status_label)
 
-func update_view_mode_controls(is_3d_carousel: bool) -> void:
-	if _carousel_layer_selector: _carousel_layer_selector.visible = is_3d_carousel
-	if _carousel_spacing_selector: _carousel_spacing_selector.visible = is_3d_carousel
-	if _density_selector: _density_selector.visible = not is_3d_carousel
+func update_view_mode_controls(_unused: bool = false) -> void:
+	if _density_selector: _density_selector.visible = true
 
 func set_selected_theme(theme_index: int) -> void:
 	if _theme_selector and theme_index >= 0 and theme_index < _theme_selector.item_count:
