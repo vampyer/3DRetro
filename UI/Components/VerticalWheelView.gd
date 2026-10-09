@@ -204,12 +204,27 @@ func _update_wheel_cards_visuals() -> void:
 	
 	for idx in range(children.size()):
 		var card = children[idx]
-		if idx == _selected_index:
-			card.modulate = Color(1.1, 1.1, 1.1, 1.0)
-			card.scale = Vector2(1.05, 1.05)
-		else:
-			card.modulate = Color(0.7, 0.7, 0.75, 0.85)
-			card.scale = Vector2(1.0, 1.0)
+		var dist_from_center = float(idx - _selected_index)
+		var abs_dist = absf(dist_from_center)
+		
+		# Curved 3D Wheel Arc Math: curve horizontal position inward as distance increases
+		var curve_offset = (1.0 - cos(minf(abs_dist * 0.4, PI * 0.5))) * 65.0
+		var target_pos_x = curve_offset
+		
+		var target_scale = Vector2(1.06, 1.06) if idx == _selected_index else Vector2(maxf(0.82, 1.0 - abs_dist * 0.05), maxf(0.82, 1.0 - abs_dist * 0.05))
+		var target_modulate = Color(1.15, 1.15, 1.15, 1.0) if idx == _selected_index else Color(0.65, 0.65, 0.75, maxf(0.35, 1.0 - abs_dist * 0.18))
+		
+		var tween = create_tween().set_parallel(true)
+		tween.tween_property(card, "position:x", target_pos_x, 0.15).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tween.tween_property(card, "scale", target_scale, 0.15).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tween.tween_property(card, "modulate", target_modulate, 0.15).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+	# Auto-scroll container to keep active wheel item centered
+	if _selected_index >= 0 and _selected_index < children.size():
+		var target_card = children[_selected_index]
+		var target_scroll_y = maxf(0.0, target_card.position.y - 180)
+		var scroll_tween = create_tween()
+		scroll_tween.tween_property(_wheel_scroll, "scroll_vertical", int(target_scroll_y), 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 func _on_launch_pressed() -> void:
 	if _selected_index >= 0 and _selected_index < _games.size():

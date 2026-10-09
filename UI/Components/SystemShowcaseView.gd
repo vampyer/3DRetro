@@ -113,14 +113,16 @@ func _rebuild_system_cards() -> void:
 		sb.border_width_right = 1
 		sb.border_width_bottom = 1
 		sb.border_color = sys["color"]
-		sb.set_corner_radius_all(8)
+		sb.shadow_color = Color(sys["color"].r, sys["color"].g, sys["color"].b, 0.35)
+		sb.shadow_size = 10
+		sb.set_corner_radius_all(10)
 		sys_card.add_theme_stylebox_override("panel", sb)
 
 		var card_margin = MarginContainer.new()
-		card_margin.add_theme_constant_override("margin_left", 12)
-		card_margin.add_theme_constant_override("margin_top", 12)
-		card_margin.add_theme_constant_override("margin_right", 12)
-		card_margin.add_theme_constant_override("margin_bottom", 12)
+		card_margin.add_theme_constant_override("margin_left", 14)
+		card_margin.add_theme_constant_override("margin_top", 14)
+		card_margin.add_theme_constant_override("margin_right", 14)
+		card_margin.add_theme_constant_override("margin_bottom", 14)
 		sys_card.add_child(card_margin)
 
 		var card_vbox = VBoxContainer.new()
@@ -151,5 +153,15 @@ func _rebuild_system_cards() -> void:
 			system_selected.emit(captured_id)
 		)
 		card_vbox.add_child(browse_btn)
+
+		# Sleek hover scale animation
+		sys_card.mouse_entered.connect(func():
+			var tween = sys_card.create_tween()
+			tween.tween_property(sys_card, "scale", Vector2(1.04, 1.04), 0.12).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		)
+		sys_card.mouse_exited.connect(func():
+			var tween = sys_card.create_tween()
+			tween.tween_property(sys_card, "scale", Vector2(1.0, 1.0), 0.12).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		)
 
 		_grid.add_child(sys_card)

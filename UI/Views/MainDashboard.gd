@@ -591,6 +591,11 @@ func _switch_interface_model(model_index: int) -> void:
 	_vertical_wheel_view.visible = (model_index == 3)
 	_system_showcase_view.visible = (model_index == 4)
 	
+	if _grid_container:
+		_grid_container.modulate.a = 0.0
+		var fade_tween = create_tween()
+		fade_tween.tween_property(_grid_container, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
 	if _sorting_bar and _sorting_bar.has_method("update_view_mode_controls"):
 		_sorting_bar.update_view_mode_controls(false)
 
