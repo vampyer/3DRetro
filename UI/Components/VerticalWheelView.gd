@@ -235,10 +235,12 @@ func _on_fav_pressed() -> void:
 		favorite_toggled.emit(_games[_selected_index].get("id", ""))
 
 func _gui_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_UP:
-			_select_wheel_index(_selected_index - 1)
-		elif event.keycode == KEY_DOWN:
-			_select_wheel_index(_selected_index + 1)
-		elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
-			_on_launch_pressed()
+	if event.is_action_pressed("ui_up"):
+		_select_wheel_index(_selected_index - 1)
+		accept_event()
+	elif event.is_action_pressed("ui_down"):
+		_select_wheel_index(_selected_index + 1)
+		accept_event()
+	elif event.is_action_pressed("ui_accept"):
+		_on_launch_pressed()
+		accept_event()

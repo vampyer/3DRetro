@@ -218,7 +218,11 @@ func _on_focus_exited() -> void:
 	tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 func _on_gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+	if event.is_action_pressed("ui_accept"):
+		if _game_data.has("id"):
+			launch_requested.emit(_game_data["id"])
+			accept_event()
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if _game_data.has("id"):
 			game_selected.emit(_game_data["id"])
 			if event.double_click:

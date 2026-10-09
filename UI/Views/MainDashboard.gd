@@ -172,6 +172,13 @@ func _find_first_focusable(node: Node) -> Control:
 			return res
 	return null
 
+func _input(event: InputEvent) -> void:
+	if event is InputEventJoypadButton or event is InputEventJoypadMotion:
+		if _selected_input_device_mode != 2: # Unless forced Keyboard/Mouse
+			var focus_owner = get_viewport().gui_get_focus_owner()
+			if not focus_owner or not is_instance_valid(focus_owner) or not focus_owner.is_visible_in_tree():
+				_grab_first_ui_focus()
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
 		if event.keycode == KEY_ESCAPE:
@@ -190,6 +197,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventJoypadButton and event.pressed:
 		if event.button_index == JOY_BUTTON_START:
 			_open_start_menu()
+		elif event.button_index == JOY_BUTTON_BACK:
+			if _hotkey_guide_modal: _hotkey_guide_modal.popup_centered()
 		elif event.button_index == JOY_BUTTON_LEFT_SHOULDER:
 			var prev_model = (_current_interface_model - 1 + 5) % 5
 			_interface_model_selector.selected = prev_model
@@ -199,8 +208,21 @@ func _unhandled_input(event: InputEvent) -> void:
 			_interface_model_selector.selected = next_model
 			_switch_interface_model(next_model)
 		elif event.button_index == JOY_BUTTON_Y:
-			if _sidebar_nav and _sidebar_nav.has_method("focus_search_box"):
+			var focus_owner = get_viewport().gui_get_focus_owner()
+			if focus_owner and "game_data" in focus_owner and "id" in focus_owner.game_data:
+				_on_favorite_toggled(focus_owner.game_data["id"])
+			elif _sidebar_nav and _sidebar_nav.has_method("focus_search_box"):
 				_sidebar_nav.focus_search_box()
+		elif event.button_index == JOY_BUTTON_X:
+			var focus_owner = get_viewport().gui_get_focus_owner()
+			if focus_owner and "game_data" in focus_owner and "id" in focus_owner.game_data:
+				_on_metadata_download_requested(focus_owner.game_data["id"])
+			elif _sidebar_nav and _sidebar_nav.has_method("focus_search_box"):
+				_sidebar_nav.focus_search_box()
+		elif event.button_index == JOY_BUTTON_B:
+			if _current_interface_model != 4:
+				_interface_model_selector.selected = 4
+				_switch_interface_model(4)
 
 func _toggle_fullscreen() -> void:
 	var mode = DisplayServer.window_get_mode()
