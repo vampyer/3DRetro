@@ -17,6 +17,8 @@ signal open_color_picker_requested
 signal toggle_bgm_requested
 signal rescan_roms_requested
 signal open_about_requested
+signal open_achievements_requested
+signal open_hotkey_guide_requested
 
 var _file_button: MenuButton
 var _view_button: MenuButton
@@ -70,6 +72,7 @@ func _build_menu_bar() -> void:
 	_tools_menu = _tools_button.get_popup()
 	_tools_menu.add_item("⚙️ Per-System Overrides...", 300)
 	_tools_menu.add_item("🎨 Custom UI Theme Colors...", 301)
+	_tools_menu.add_item("🏆 RetroAchievements Profile...", 304)
 	_tools_menu.add_item("🎵 Toggle Background Music", 302)
 	_tools_menu.add_separator()
 	_tools_menu.add_item("🔄 Rescan ROM Directories", 303, KEY_MASK_CTRL | KEY_R)
@@ -81,6 +84,7 @@ func _build_menu_bar() -> void:
 	_help_button.text = "Help"
 	_help_button.focus_mode = Control.FOCUS_ALL
 	_help_menu = _help_button.get_popup()
+	_help_menu.add_item("🎮 Controller Hotkey Guide...", 401)
 	_help_menu.add_item("❓ About 3DRetro...", 400, KEY_F1)
 	_help_menu.id_pressed.connect(_on_help_menu_pressed)
 	add_child(_help_button)
@@ -166,7 +170,9 @@ func _on_tools_menu_pressed(id: int) -> void:
 		301: open_color_picker_requested.emit()
 		302: toggle_bgm_requested.emit()
 		303: rescan_roms_requested.emit()
+		304: open_achievements_requested.emit()
 
 func _on_help_menu_pressed(id: int) -> void:
 	match id:
 		400: open_about_requested.emit()
+		401: open_hotkey_guide_requested.emit()

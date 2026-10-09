@@ -23,6 +23,8 @@ const GameDetailPanelScript = preload("res://UI/Components/GameDetailPanel.gd")
 const EmulatorSelectionModalScript = preload("res://UI/Components/EmulatorSelectionModal.gd")
 const ColorPickerModalScript = preload("res://UI/Components/ColorPickerModal.gd")
 const SystemConfigModalScript = preload("res://UI/Components/SystemConfigModal.gd")
+const RetroAchievementsModalScript = preload("res://UI/Components/RetroAchievementsModal.gd")
+const HotkeyGuideModalScript = preload("res://UI/Components/HotkeyGuideModal.gd")
 
 var _background_rect: TextureRect
 var _top_menu_bar
@@ -42,6 +44,8 @@ var _detail_panel
 var _selection_modal
 var _color_picker_modal
 var _system_config_modal
+var _achievements_modal
+var _hotkey_guide_modal
 var _grid_container: Control
 
 var _file_dialog: FileDialog
@@ -164,6 +168,8 @@ func _initialize_ui_components() -> void:
 	_top_menu_bar.toggle_bgm_requested.connect(_on_bgm_toggled)
 	_top_menu_bar.rescan_roms_requested.connect(_load_and_scan_games)
 	_top_menu_bar.open_about_requested.connect(_on_menu_open_about_requested)
+	_top_menu_bar.open_achievements_requested.connect(func(): if _achievements_modal: _achievements_modal.open_modal())
+	_top_menu_bar.open_hotkey_guide_requested.connect(func(): if _hotkey_guide_modal: _hotkey_guide_modal.popup_centered())
 	root_vbox.add_child(_top_menu_bar)
 
 	# Header Bar
@@ -289,6 +295,12 @@ func _initialize_ui_components() -> void:
 
 	_system_config_modal = SystemConfigModalScript.new(_sys_config_manager)
 	add_child(_system_config_modal)
+
+	_achievements_modal = RetroAchievementsModalScript.new()
+	add_child(_achievements_modal)
+
+	_hotkey_guide_modal = HotkeyGuideModalScript.new()
+	add_child(_hotkey_guide_modal)
 
 func _on_menu_open_file_requested() -> void:
 	_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
