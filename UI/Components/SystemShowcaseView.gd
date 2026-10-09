@@ -67,7 +67,7 @@ func _build_ui() -> void:
 	margin.add_child(header_vbox)
 
 	_title_label = Label.new()
-	_title_label.text = "🏛️ RetroBat Console System Showcase"
+	_title_label.text = "🏛️ Console System Showcase"
 	_title_label.add_theme_font_size_override("font_size", 26)
 	header_vbox.add_child(_title_label)
 

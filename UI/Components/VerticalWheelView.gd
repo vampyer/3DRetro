@@ -95,7 +95,7 @@ func _build_ui() -> void:
 	right_vbox.add_child(_video_snap_panel)
 
 	var video_lbl = Label.new()
-	video_lbl.text = "🎬 RetroBat Gameplay Video Preview"
+	video_lbl.text = "🎬 Gameplay Video Preview"
 	video_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	video_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_video_snap_panel.add_child(video_lbl)
@@ -132,7 +132,7 @@ func _build_ui() -> void:
 	meta_vbox.add_child(_detail_meta_lbl)
 
 	_detail_synopsis_lbl = Label.new()
-	_detail_synopsis_lbl.text = "Scroll through the RetroBat Vertical Wheel using Up/Down or Gamepad to explore your titles."
+	_detail_synopsis_lbl.text = "Scroll through the Vertical Wheel using Up/Down or Gamepad to explore your titles."
 	_detail_synopsis_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_detail_synopsis_lbl.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	meta_vbox.add_child(_detail_synopsis_lbl)

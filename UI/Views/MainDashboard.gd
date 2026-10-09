@@ -209,8 +209,8 @@ func _initialize_ui_components() -> void:
 	_interface_model_selector.add_item("🖥️ Classic 3-Column Desktop", 0)
 	_interface_model_selector.add_item("📺 Couch Big Picture TV", 1)
 	_interface_model_selector.add_item("📋 Minimalist Compact List", 2)
-	_interface_model_selector.add_item("🏎️ RetroBat Vertical Wheel", 3)
-	_interface_model_selector.add_item("🏛️ RetroBat Console Showcase", 4)
+	_interface_model_selector.add_item("🏎️ Vertical Wheel", 3)
+	_interface_model_selector.add_item("🏛️ Console Showcase", 4)
 	_interface_model_selector.item_selected.connect(_switch_interface_model)
 	status_container.add_child(_interface_model_selector)
 
