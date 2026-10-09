@@ -6,6 +6,8 @@ const RomDirectoryManagerScript = preload("res://Core/Services/RomDirectoryManag
 const CollectionManagerScript = preload("res://Core/Services/CollectionManager.gd")
 const BackgroundMusicPlayerScript = preload("res://Core/Services/BackgroundMusicPlayer.gd")
 const SystemConfigOverrideManagerScript = preload("res://Core/Services/SystemConfigOverrideManager.gd")
+const EmulatorLaunchEngineScript = preload("res://Core/Services/EmulatorLaunchEngine.gd")
+const ScraperServiceScript = preload("res://Core/Services/ScraperService.gd")
 const ShaderPresetManagerScript = preload("res://UI/Services/ShaderPresetManager.gd")
 const ThemeManagerScript = preload("res://UI/Services/ThemeManager.gd")
 
@@ -658,18 +660,27 @@ func _on_favorite_toggled(game_id: String) -> void:
 		_detail_panel.display_game_details(_loaded_games[game_id])
 
 func _on_metadata_download_requested(game_id: String) -> void:
-	_status_label.text = "Fetching metadata for " + game_id + "..."
+	if _loaded_games.has(game_id):
+		var game = _loaded_games[game_id]
+		var updated = ScraperServiceScript.scrape_game_metadata(game)
+		_loaded_games[game_id] = updated
+		_db.save_game(updated)
+		_detail_panel.display_game_details(updated)
+		_status_label.text = "📥 Metadata & Artwork updated for " + updated.get("title", "Game") + "."
 
 func _on_game_launch_requested(game_id: String) -> void:
 	if _loaded_games.has(game_id):
 		var game = _loaded_games[game_id]
 		var title = game.get("title", "Game")
 		var plat = game.get("platform", "SNES")
-		_status_label.text = "Launching " + title + " (" + str(plat).to_upper() + ")..."
+		_status_label.text = "🚀 Launching " + title + " (" + str(plat).to_upper() + ")..."
 		_bgm_player.pause_for_game()
 		
 		game["play_count"] = game.get("play_count", 0) + 1
 		_db.save_game(game)
+
+		var pid = EmulatorLaunchEngineScript.launch_game(game)
+		_status_label.text = "🎮 Running " + title + " (Session Active)..."
 		
 		get_tree().create_timer(3.0).timeout.connect(func():
 			_status_label.text = "Finished session for " + title + "."

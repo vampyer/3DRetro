@@ -43,6 +43,7 @@ static func get_all_supported_platforms() -> Array[Dictionary]:
 		{"id": "apple2", "name": "Apple II", "ext": [".dsk", ".do"], "emulator": "linapple"},
 		{"id": "coleco", "name": "ColecoVision", "ext": [".col", ".bin"], "emulator": "colem"},
 		{"id": "intellivision", "name": "Intellivision", "ext": [".int", ".bin"], "emulator": "jzintv"},
+		{"id": "pc", "name": "Windows PC & Steam Games", "ext": [".exe", ".url", ".lnk", ".bat"], "emulator": "native"},
 		{"id": "wonder-swan", "name": "Bandai WonderSwan", "ext": [".ws", ".wsc"], "emulator": "mednafen"}
 	]
 
