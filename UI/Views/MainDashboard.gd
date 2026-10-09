@@ -72,14 +72,44 @@ func _ready() -> void:
 	_initialize_ui_components()
 	_load_and_scan_games()
 	_on_theme_changed(0) # Apply initial default skin theme & backdrop texture
+	_setup_gamepad_input_mappings()
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
 	_update_gamepad_status()
+
+func _setup_gamepad_input_mappings() -> void:
+	var mappings = [
+		{"action": "ui_up", "button": JOY_BUTTON_DPAD_UP, "axis": JOY_AXIS_LEFT_Y, "axis_val": -1.0},
+		{"action": "ui_down", "button": JOY_BUTTON_DPAD_DOWN, "axis": JOY_AXIS_LEFT_Y, "axis_val": 1.0},
+		{"action": "ui_left", "button": JOY_BUTTON_DPAD_LEFT, "axis": JOY_AXIS_LEFT_X, "axis_val": -1.0},
+		{"action": "ui_right", "button": JOY_BUTTON_DPAD_RIGHT, "axis": JOY_AXIS_LEFT_X, "axis_val": 1.0},
+		{"action": "ui_accept", "button": JOY_BUTTON_A, "axis": -1, "axis_val": 0.0},
+		{"action": "ui_cancel", "button": JOY_BUTTON_B, "axis": -1, "axis_val": 0.0},
+		{"action": "ui_select", "button": JOY_BUTTON_X, "axis": -1, "axis_val": 0.0}
+	]
+
+	for m in mappings:
+		var act = m["action"]
+		if not InputMap.has_action(act):
+			InputMap.add_action(act)
+
+		var btn_ev = InputEventJoypadButton.new()
+		btn_ev.button_index = m["button"]
+		if not InputMap.action_has_event(act, btn_ev):
+			InputMap.action_add_event(act, btn_ev)
+
+		if m["axis"] != -1:
+			var axis_ev = InputEventJoypadMotion.new()
+			axis_ev.axis = m["axis"]
+			axis_ev.axis_value = m["axis_val"]
+			if not InputMap.action_has_event(act, axis_ev):
+				InputMap.action_add_event(act, axis_ev)
 
 func _on_joy_connection_changed(device_id: int, connected: bool) -> void:
 	_update_gamepad_status()
 	if connected:
 		var name_str = Input.get_joy_name(device_id)
-		_status_label.text = "🎮 Controller Connected: " + name_str
+		_status_label.text = "🎮 Controller Connected & Enabled: " + name_str + " (Press START for Main Menu)"
+		_enable_gamepad_and_focus()
 	else:
 		_status_label.text = "🔌 Controller Disconnected. Keyboard & Mouse active."
 
@@ -89,9 +119,41 @@ func _update_gamepad_status() -> void:
 		var dev_name = Input.get_joy_name(joypads[0])
 		if _sorting_bar and _sorting_bar.has_method("set_gamepad_status"):
 			_sorting_bar.set_gamepad_status(true, dev_name)
+		_enable_gamepad_and_focus()
 	else:
 		if _sorting_bar and _sorting_bar.has_method("set_gamepad_status"):
 			_sorting_bar.set_gamepad_status(false)
+
+func _enable_gamepad_and_focus() -> void:
+	# Automatically grab focus on the first interactive Control element in active view
+	get_tree().create_timer(0.1).timeout.connect(_grab_first_ui_focus)
+
+func _grab_first_ui_focus() -> void:
+	var current_focused = get_viewport().gui_get_focus_owner()
+	if current_focused and is_instance_valid(current_focused):
+		return # Focus is already held cleanly
+
+	var target_parent: Node = null
+	match _current_interface_model:
+		0: target_parent = _game_grid_2d
+		1: target_parent = _couch_big_picture_view
+		2: target_parent = _minimalist_list_view
+		3: target_parent = _vertical_wheel_view
+		4: target_parent = _system_showcase_view
+
+	if target_parent and is_instance_valid(target_parent):
+		var focusable = _find_first_focusable(target_parent)
+		if focusable:
+			focusable.grab_focus()
+
+func _find_first_focusable(node: Node) -> Control:
+	if node is Control and node.focus_mode != Control.FOCUS_NONE and node.visible:
+		return node
+	for child in node.get_children():
+		var res = _find_first_focusable(child)
+		if res:
+			return res
+	return null
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
@@ -618,6 +680,8 @@ func _switch_interface_model(model_index: int) -> void:
 		_grid_container.modulate.a = 0.0
 		var fade_tween = create_tween()
 		fade_tween.tween_property(_grid_container, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+	_enable_gamepad_and_focus()
 
 	if _sorting_bar and _sorting_bar.has_method("update_view_mode_controls"):
 		_sorting_bar.update_view_mode_controls(false)
