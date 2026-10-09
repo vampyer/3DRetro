@@ -26,6 +26,7 @@ const ColorPickerModalScript = preload("res://UI/Components/ColorPickerModal.gd"
 const SystemConfigModalScript = preload("res://UI/Components/SystemConfigModal.gd")
 const RetroAchievementsModalScript = preload("res://UI/Components/RetroAchievementsModal.gd")
 const HotkeyGuideModalScript = preload("res://UI/Components/HotkeyGuideModal.gd")
+const RetroBatStartMenuModalScript = preload("res://UI/Components/RetroBatStartMenuModal.gd")
 
 var _background_rect: TextureRect
 var _top_menu_bar
@@ -48,6 +49,7 @@ var _color_picker_modal
 var _system_config_modal
 var _achievements_modal
 var _hotkey_guide_modal
+var _start_menu_modal
 var _grid_container: Control
 
 var _file_dialog: FileDialog
@@ -93,7 +95,9 @@ func _update_gamepad_status() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_F11:
+		if event.keycode == KEY_ESCAPE:
+			_open_start_menu()
+		elif event.keycode == KEY_F11:
 			_toggle_fullscreen()
 		elif event.ctrl_pressed and event.keycode == KEY_F:
 			if _sidebar_nav and _sidebar_nav.has_method("focus_search_box"):
@@ -105,7 +109,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.keycode == KEY_F1:
 			_on_menu_open_about_requested()
 	elif event is InputEventJoypadButton and event.pressed:
-		if event.button_index == JOY_BUTTON_LEFT_SHOULDER:
+		if event.button_index == JOY_BUTTON_START:
+			_open_start_menu()
+		elif event.button_index == JOY_BUTTON_LEFT_SHOULDER:
 			var prev_model = (_current_interface_model - 1 + 5) % 5
 			_interface_model_selector.selected = prev_model
 			_switch_interface_model(prev_model)
@@ -299,10 +305,27 @@ func _initialize_ui_components() -> void:
 	add_child(_system_config_modal)
 
 	_achievements_modal = RetroAchievementsModalScript.new()
-	add_child(_achievements_modal)
-
 	_hotkey_guide_modal = HotkeyGuideModalScript.new()
 	add_child(_hotkey_guide_modal)
+
+	_start_menu_modal = RetroBatStartMenuModalScript.new()
+	_start_menu_modal.scraper_requested.connect(func():
+		if not _currently_displayed_games.is_empty():
+			_on_metadata_download_requested(_currently_displayed_games[0].get("id", ""))
+	)
+	_start_menu_modal.system_settings_requested.connect(_on_system_config_requested)
+	_start_menu_modal.theme_settings_requested.connect(_on_custom_color_picker_requested)
+	_start_menu_modal.bgm_toggled.connect(_on_bgm_toggled)
+	_start_menu_modal.achievements_requested.connect(func(): if _achievements_modal: _achievements_modal.open_modal())
+	_start_menu_modal.hotkey_guide_requested.connect(func(): if _hotkey_guide_modal: _hotkey_guide_modal.popup_centered())
+	_start_menu_modal.exit_app_requested.connect(func(): get_tree().quit())
+	add_child(_start_menu_modal)
+
+func _open_start_menu() -> void:
+	if _start_menu_modal:
+		var colors = ThemeManagerScript.get_theme_colors(_sorting_bar.selected_theme if _sorting_bar and "selected_theme" in _sorting_bar else 0)
+		_start_menu_modal.apply_theme_colors(colors)
+		_start_menu_modal.open_menu()
 
 func _on_menu_open_file_requested() -> void:
 	_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
