@@ -59,6 +59,8 @@ func _build_menu_bar() -> void:
 	_view_menu.add_item("🖥️ Classic 3-Column Desktop", 200)
 	_view_menu.add_item("📺 Couch Big Picture TV", 201)
 	_view_menu.add_item("📋 Minimalist Compact List", 202)
+	_view_menu.add_item("🏎️ RetroBat Vertical Wheel", 203)
+	_view_menu.add_item("🏛️ RetroBat Console Showcase", 204)
 	_view_menu.add_separator()
 	_view_menu.add_item("🔲 Toggle Fullscreen Mode", 210, KEY_F11)
 	_view_menu.id_pressed.connect(_on_view_menu_pressed)
@@ -160,6 +162,8 @@ func _on_view_menu_pressed(id: int) -> void:
 		200: view_model_selected.emit(0)
 		201: view_model_selected.emit(1)
 		202: view_model_selected.emit(2)
+		203: view_model_selected.emit(3)
+		204: view_model_selected.emit(4)
 		210: toggle_fullscreen_requested.emit()
 
 func _on_tools_menu_pressed(id: int) -> void:

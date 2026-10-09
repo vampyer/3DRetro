@@ -18,6 +18,8 @@ const SidebarCategoryNavScript = preload("res://UI/Components/SidebarCategoryNav
 const VirtualGameGridScript = preload("res://UI/Components/VirtualGameGrid.gd")
 const CouchBigPictureViewScript = preload("res://UI/Components/CouchBigPictureView.gd")
 const MinimalistListViewScript = preload("res://UI/Components/MinimalistListView.gd")
+const VerticalWheelViewScript = preload("res://UI/Components/VerticalWheelView.gd")
+const SystemShowcaseViewScript = preload("res://UI/Components/SystemShowcaseView.gd")
 const GameDetailPanelScript = preload("res://UI/Components/GameDetailPanel.gd")
 const EmulatorSelectionModalScript = preload("res://UI/Components/EmulatorSelectionModal.gd")
 const ColorPickerModalScript = preload("res://UI/Components/ColorPickerModal.gd")
@@ -38,6 +40,8 @@ var _game_grid_2d
 var _viewport_container: SubViewportContainer
 var _couch_big_picture_view
 var _minimalist_list_view
+var _vertical_wheel_view
+var _system_showcase_view
 var _detail_panel
 var _selection_modal
 var _color_picker_modal
@@ -102,11 +106,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			_on_menu_open_about_requested()
 	elif event is InputEventJoypadButton and event.pressed:
 		if event.button_index == JOY_BUTTON_LEFT_SHOULDER:
-			var prev_model = (_current_interface_model - 1 + 3) % 3
+			var prev_model = (_current_interface_model - 1 + 5) % 5
 			_interface_model_selector.selected = prev_model
 			_switch_interface_model(prev_model)
 		elif event.button_index == JOY_BUTTON_RIGHT_SHOULDER:
-			var next_model = (_current_interface_model + 1) % 3
+			var next_model = (_current_interface_model + 1) % 5
 			_interface_model_selector.selected = next_model
 			_switch_interface_model(next_model)
 		elif event.button_index == JOY_BUTTON_Y:
@@ -205,6 +209,8 @@ func _initialize_ui_components() -> void:
 	_interface_model_selector.add_item("🖥️ Classic 3-Column Desktop", 0)
 	_interface_model_selector.add_item("📺 Couch Big Picture TV", 1)
 	_interface_model_selector.add_item("📋 Minimalist Compact List", 2)
+	_interface_model_selector.add_item("🏎️ RetroBat Vertical Wheel", 3)
+	_interface_model_selector.add_item("🏛️ RetroBat Console Showcase", 4)
 	_interface_model_selector.item_selected.connect(_switch_interface_model)
 	status_container.add_child(_interface_model_selector)
 
@@ -253,6 +259,20 @@ func _initialize_ui_components() -> void:
 	_minimalist_list_view.list_game_selected.connect(_on_game_selected)
 	_minimalist_list_view.list_game_activated.connect(_on_game_launch_requested)
 	_grid_container.add_child(_minimalist_list_view)
+
+	_vertical_wheel_view = VerticalWheelViewScript.new()
+	_vertical_wheel_view.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_vertical_wheel_view.visible = false
+	_vertical_wheel_view.game_selected.connect(_on_game_selected)
+	_vertical_wheel_view.launch_requested.connect(_on_game_launch_requested)
+	_vertical_wheel_view.favorite_toggled.connect(_on_favorite_toggled)
+	_grid_container.add_child(_vertical_wheel_view)
+
+	_system_showcase_view = SystemShowcaseViewScript.new()
+	_system_showcase_view.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_system_showcase_view.visible = false
+	_system_showcase_view.system_selected.connect(_on_category_selected)
+	_grid_container.add_child(_system_showcase_view)
 
 	_detail_panel = GameDetailPanelScript.new()
 	_detail_panel.launch_requested.connect(_on_game_launch_requested)
@@ -557,15 +577,20 @@ func _update_displayed_list(list: Array) -> void:
 	_game_grid_2d.set_games(list)
 	_couch_big_picture_view.set_games(list)
 	_minimalist_list_view.set_games(list)
+	_vertical_wheel_view.set_games(list)
+	_system_showcase_view.set_games(list)
 
 func _switch_interface_model(model_index: int) -> void:
 	_current_interface_model = model_index
-	_sidebar_nav.visible = true
+	_sidebar_nav.visible = (model_index != 1 and model_index != 4)
 	_detail_panel.visible = (model_index == 0 or model_index == 2)
 	
 	_game_grid_2d.visible = (model_index == 0)
 	_couch_big_picture_view.visible = (model_index == 1)
 	_minimalist_list_view.visible = (model_index == 2)
+	_vertical_wheel_view.visible = (model_index == 3)
+	_system_showcase_view.visible = (model_index == 4)
+	
 	if _sorting_bar and _sorting_bar.has_method("update_view_mode_controls"):
 		_sorting_bar.update_view_mode_controls(false)
 
