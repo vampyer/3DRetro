@@ -113,7 +113,24 @@ func _on_joy_connection_changed(device_id: int, connected: bool) -> void:
 	else:
 		_status_label.text = "🔌 Controller Disconnected. Keyboard & Mouse active."
 
+var _selected_input_device_mode: int = 0 # 0: Auto-Detect, 1: Gamepad, 2: Keyboard/Mouse
+
+func _on_input_device_mode_changed(mode_index: int) -> void:
+	_selected_input_device_mode = mode_index
+	match mode_index:
+		0: # Auto-Detect
+			_update_gamepad_status()
+		1: # Gamepad Forced
+			var joypads = Input.get_connected_joypads()
+			var dev_name = Input.get_joy_name(joypads[0]) if joypads.size() > 0 else "XInput Gamepad"
+			_status_label.text = "🎮 Gamepad Mode Forced Active (" + dev_name + ")"
+			_enable_gamepad_and_focus()
+		2: # Keyboard & Mouse Forced
+			_status_label.text = "⌨️ Keyboard & Mouse Mode Forced Active"
+
 func _update_gamepad_status() -> void:
+	if _selected_input_device_mode == 2:
+		return # Keyboard & Mouse mode forced
 	var joypads = Input.get_connected_joypads()
 	if joypads.size() > 0:
 		var dev_name = Input.get_joy_name(joypads[0])
@@ -290,6 +307,7 @@ func _initialize_ui_components() -> void:
 	_sorting_bar.custom_color_picker_requested.connect(_on_custom_color_picker_requested)
 	_sorting_bar.system_config_requested.connect(_on_system_config_requested)
 	_sorting_bar.bgm_toggled.connect(_on_bgm_toggled)
+	_sorting_bar.input_device_mode_changed.connect(_on_input_device_mode_changed)
 	root_vbox.add_child(_sorting_bar)
 
 	# Body Layout
@@ -376,6 +394,12 @@ func _initialize_ui_components() -> void:
 			_on_metadata_download_requested(_currently_displayed_games[0].get("id", ""))
 	)
 	_start_menu_modal.system_settings_requested.connect(_on_system_config_requested)
+	_start_menu_modal.input_device_settings_requested.connect(func():
+		var next_mode = (_selected_input_device_mode + 1) % 3
+		_on_input_device_mode_changed(next_mode)
+		if _sorting_bar and "_input_device_selector" in _sorting_bar and _sorting_bar._input_device_selector:
+			_sorting_bar._input_device_selector.selected = next_mode
+	)
 	_start_menu_modal.theme_settings_requested.connect(_on_custom_color_picker_requested)
 	_start_menu_modal.bgm_toggled.connect(_on_bgm_toggled)
 	_start_menu_modal.achievements_requested.connect(func(): if _achievements_modal: _achievements_modal.open_modal())

@@ -10,6 +10,7 @@ signal theme_settings_requested
 signal bgm_toggled
 signal achievements_requested
 signal hotkey_guide_requested
+signal input_device_settings_requested
 signal exit_app_requested
 
 var _vbox: VBoxContainer
@@ -79,6 +80,7 @@ func _build_ui() -> void:
 
 	_create_menu_button("🖼️ SCRAPER & METADATA", func(): scraper_requested.emit(); hide())
 	_create_menu_button("⚙️ EMULATOR & SYSTEM SETTINGS", func(): system_settings_requested.emit(); hide())
+	_create_menu_button("🕹️ INPUT DEVICE (GAMEPAD / KEYBOARD)", func(): input_device_settings_requested.emit(); hide())
 	_create_menu_button("🎨 UI THEMES & CUSTOM COLORS", func(): theme_settings_requested.emit(); hide())
 	_create_menu_button("🎵 AUDIO & BACKGROUND MUSIC", func(): bgm_toggled.emit())
 	_create_menu_button("🏆 RETROACHIEVEMENTS PROFILE", func(): achievements_requested.emit(); hide())

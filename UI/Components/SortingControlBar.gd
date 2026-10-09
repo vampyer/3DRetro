@@ -8,7 +8,7 @@ signal custom_color_picker_requested
 signal system_config_requested
 signal bgm_toggled
 signal carousel_layer_changed(layer_index: int)
-signal carousel_spacing_changed(spacing_index: int)
+signal input_device_mode_changed(device_mode_index: int)
 
 enum SortMode {
 	TITLE_ASCENDING = 0,
@@ -24,15 +24,21 @@ enum CardDensity {
 	LARGE = 2
 }
 
+enum InputDeviceMode {
+	AUTO_DETECT = 0,
+	GAMEPAD_ONLY = 1,
+	KEYBOARD_MOUSE = 2
+}
+
 var _sort_selector: OptionButton
 var _density_selector: OptionButton
 var _carousel_layer_selector: OptionButton
 var _carousel_spacing_selector: OptionButton
 var _theme_selector: OptionButton
+var _input_device_selector: OptionButton
 var _custom_color_button: Button
 var _sys_config_button: Button
 var _bgm_button: Button
-var _pad_status_label: Label
 
 func _ready() -> void:
 	add_theme_constant_override("separation", 10)
@@ -103,10 +109,15 @@ func _ready() -> void:
 	_bgm_button.pressed.connect(func(): bgm_toggled.emit())
 	add_child(_bgm_button)
 	
-	_pad_status_label = Label.new()
-	_pad_status_label.text = "🎮 XInput Gamepad"
-	_pad_status_label.modulate = Color(0.2, 0.9, 0.4)
-	add_child(_pad_status_label)
+	# 5. Device Selector (Auto-Detect, Gamepad, Keyboard/Mouse)
+	_input_device_selector = OptionButton.new()
+	_input_device_selector.focus_mode = Control.FOCUS_ALL
+	_input_device_selector.add_item("⚡ Input: Auto-Detect", InputDeviceMode.AUTO_DETECT)
+	_input_device_selector.add_item("🎮 Input: Gamepad", InputDeviceMode.GAMEPAD_ONLY)
+	_input_device_selector.add_item("⌨️ Input: Keyboard & Mouse", InputDeviceMode.KEYBOARD_MOUSE)
+	_input_device_selector.selected = InputDeviceMode.AUTO_DETECT
+	_input_device_selector.item_selected.connect(func(idx: int): input_device_mode_changed.emit(idx))
+	add_child(_input_device_selector)
 
 func update_view_mode_controls(_unused: bool = false) -> void:
 	if _density_selector: _density_selector.visible = true
@@ -116,15 +127,14 @@ func set_selected_theme(theme_index: int) -> void:
 		_theme_selector.selected = theme_index
 
 func set_gamepad_status(connected: bool, device_name: String = "") -> void:
-	if not _pad_status_label:
+	if not _input_device_selector:
 		return
-	if connected:
-		var name_clean = device_name if not device_name.is_empty() else "Gamepad"
-		_pad_status_label.text = "🎮 " + name_clean
-		_pad_status_label.modulate = Color(0.2, 0.95, 0.4)
-	else:
-		_pad_status_label.text = "⌨️ Keyboard & Mouse"
-		_pad_status_label.modulate = Color(0.7, 0.8, 1.0)
+	if _input_device_selector.selected == InputDeviceMode.AUTO_DETECT:
+		if connected:
+			var name_clean = device_name if not device_name.is_empty() else "Gamepad"
+			_input_device_selector.set_item_text(0, "🎮 " + name_clean + " (Auto)")
+		else:
+			_input_device_selector.set_item_text(0, "⌨️ Kbd/Mouse (Auto)")
 
 func apply_theme_colors(colors: Dictionary) -> void:
 	var accent = colors.get("accent", Color(0.0, 0.85, 0.95))
@@ -133,7 +143,7 @@ func apply_theme_colors(colors: Dictionary) -> void:
 	var border_col = colors.get("border_color", accent.darkened(0.5))
 
 	for child in get_children():
-		if child is Label and child != _pad_status_label:
+		if child is Label:
 			child.add_theme_color_override("font_color", text_col)
 		elif child is OptionButton or child is Button:
 			child.add_theme_color_override("font_color", text_col)
