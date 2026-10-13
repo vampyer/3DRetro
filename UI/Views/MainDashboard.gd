@@ -66,6 +66,13 @@ var _all_scanned_games: Array = []
 var _currently_displayed_games: Array = []
 var _loaded_games: Dictionary = {}
 var _current_interface_model: int = 0
+const INTERFACE_MODEL_COUNT: int = 5
+const JOY_STICK_WAKE_THRESHOLD: float = 0.5
+var _selected_game_id: String = ""
+
+# Running emulator session, polled so playtime and background music follow the real process
+var _active_session: Dictionary = {}
+var _session_timer: Timer
 
 func _ready() -> void:
 	_initialize_services()
@@ -108,6 +115,9 @@ func _on_joy_connection_changed(device_id: int, connected: bool) -> void:
 	_update_gamepad_status()
 	if connected:
 		var name_str = Input.get_joy_name(device_id)
+		if _selected_input_device_mode == 2:
+			_status_label.text = "🎮 Controller Connected: " + name_str + " (Keyboard & Mouse mode is forced)"
+			return
 		_status_label.text = "🎮 Controller Connected & Enabled: " + name_str + " (Press START for Main Menu)"
 		_enable_gamepad_and_focus()
 	else:
@@ -147,7 +157,7 @@ func _enable_gamepad_and_focus() -> void:
 
 func _grab_first_ui_focus() -> void:
 	var current_focused = get_viewport().gui_get_focus_owner()
-	if current_focused and is_instance_valid(current_focused):
+	if current_focused and is_instance_valid(current_focused) and current_focused.is_visible_in_tree():
 		return # Focus is already held cleanly
 
 	var target_parent: Node = null
@@ -173,6 +183,8 @@ func _find_first_focusable(node: Node) -> Control:
 	return null
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventJoypadMotion and absf(event.axis_value) < JOY_STICK_WAKE_THRESHOLD:
+		return # Ignore stick drift and resting triggers
 	if event is InputEventJoypadButton or event is InputEventJoypadMotion:
 		if _selected_input_device_mode != 2: # Unless forced Keyboard/Mouse
 			var focus_owner = get_viewport().gui_get_focus_owner()
@@ -200,29 +212,42 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.button_index == JOY_BUTTON_BACK:
 			if _hotkey_guide_modal: _hotkey_guide_modal.popup_centered()
 		elif event.button_index == JOY_BUTTON_LEFT_SHOULDER:
-			var prev_model = (_current_interface_model - 1 + 5) % 5
+			var prev_model = (_current_interface_model - 1 + INTERFACE_MODEL_COUNT) % INTERFACE_MODEL_COUNT
 			_interface_model_selector.selected = prev_model
 			_switch_interface_model(prev_model)
 		elif event.button_index == JOY_BUTTON_RIGHT_SHOULDER:
-			var next_model = (_current_interface_model + 1) % 5
+			var next_model = (_current_interface_model + 1) % INTERFACE_MODEL_COUNT
 			_interface_model_selector.selected = next_model
 			_switch_interface_model(next_model)
 		elif event.button_index == JOY_BUTTON_Y:
-			var focus_owner = get_viewport().gui_get_focus_owner()
-			if focus_owner and "game_data" in focus_owner and "id" in focus_owner.game_data:
-				_on_favorite_toggled(focus_owner.game_data["id"])
+			var game_id = _get_active_game_id()
+			if game_id != "":
+				_on_favorite_toggled(game_id)
+				var is_fav = _loaded_games[game_id].get("is_favorite", false)
+				_status_label.text = ("⭐ Added to Favorites: " if is_fav else "☆ Removed from Favorites: ") + _loaded_games[game_id].get("title", "Game")
 			elif _sidebar_nav and _sidebar_nav.has_method("focus_search_box"):
 				_sidebar_nav.focus_search_box()
 		elif event.button_index == JOY_BUTTON_X:
-			var focus_owner = get_viewport().gui_get_focus_owner()
-			if focus_owner and "game_data" in focus_owner and "id" in focus_owner.game_data:
-				_on_metadata_download_requested(focus_owner.game_data["id"])
+			var game_id = _get_active_game_id()
+			if game_id != "":
+				_on_metadata_download_requested(game_id)
 			elif _sidebar_nav and _sidebar_nav.has_method("focus_search_box"):
 				_sidebar_nav.focus_search_box()
 		elif event.button_index == JOY_BUTTON_B:
 			if _current_interface_model != 4:
 				_interface_model_selector.selected = 4
 				_switch_interface_model(4)
+
+# Game the current view has selected, or "" when none applies (e.g. System Showcase).
+func _get_active_game_id() -> String:
+	if _current_interface_model == 4:
+		return ""
+	if _selected_game_id == "" or not _loaded_games.has(_selected_game_id):
+		return ""
+	# Ignore a stale selection that a search or filter has hidden from the current list
+	if not _currently_displayed_games.any(func(g): return g.get("id", "") == _selected_game_id):
+		return ""
+	return _selected_game_id
 
 func _toggle_fullscreen() -> void:
 	var mode = DisplayServer.window_get_mode()
@@ -240,6 +265,11 @@ func _initialize_services() -> void:
 	_shader_manager = ShaderPresetManagerScript.new()
 	
 	add_child(_bgm_player)
+
+	_session_timer = Timer.new()
+	_session_timer.wait_time = 1.0
+	_session_timer.timeout.connect(_poll_active_session)
+	add_child(_session_timer)
 
 func _initialize_ui_components() -> void:
 	# Full-Screen Skin Background Texture Canvas
@@ -352,6 +382,7 @@ func _initialize_ui_components() -> void:
 	_game_grid_2d = VirtualGameGridScript.new()
 	_game_grid_2d.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_game_grid_2d.game_selected.connect(_on_game_selected)
+	_game_grid_2d.launch_requested.connect(_on_game_launch_requested)
 	_grid_container.add_child(_game_grid_2d)
 
 	_couch_big_picture_view = CouchBigPictureViewScript.new()
@@ -407,13 +438,18 @@ func _initialize_ui_components() -> void:
 	add_child(_system_config_modal)
 
 	_achievements_modal = RetroAchievementsModalScript.new()
+	add_child(_achievements_modal)
+
 	_hotkey_guide_modal = HotkeyGuideModalScript.new()
 	add_child(_hotkey_guide_modal)
 
 	_start_menu_modal = RetroBatStartMenuModalScript.new()
 	_start_menu_modal.scraper_requested.connect(func():
-		if not _currently_displayed_games.is_empty():
-			_on_metadata_download_requested(_currently_displayed_games[0].get("id", ""))
+		var game_id = _get_active_game_id()
+		if game_id == "" and not _currently_displayed_games.is_empty():
+			game_id = _currently_displayed_games[0].get("id", "")
+		if game_id != "":
+			_on_metadata_download_requested(game_id)
 	)
 	_start_menu_modal.system_settings_requested.connect(_on_system_config_requested)
 	_start_menu_modal.input_device_settings_requested.connect(func():
@@ -446,27 +482,23 @@ func _on_menu_open_file_requested() -> void:
 
 func _on_file_dialog_rom_selected(path: String) -> void:
 	var file_name = path.get_file()
-	var plat = "snes"
-	if path.ends_with(".nes"): plat = "nes"
-	elif path.ends_with(".md") or path.ends_with(".smd"): plat = "genesis"
-	elif path.ends_with(".gba"): plat = "gba"
-	elif path.ends_with(".iso") or path.ends_with(".chd"): plat = "ps1"
-	
-	var custom_game = {
+	var plat = _guess_platform_from_extension(path)
+
+	var custom_game = _merge_with_saved({
 		"id": "custom_" + file_name,
 		"title": file_name.get_basename().capitalize(),
 		"platform": plat,
 		"file_path": path,
 		"developer": "User Loaded",
-		"release_year": 2026,
+		"release_year": 0,
 		"genre": "Custom ROM",
-		"rating": 5.0,
-		"is_favorite": true,
-		"play_count": 1,
+		"rating": 0,
+		"is_favorite": false,
+		"play_count": 0,
 		"total_play_time": 0,
 		"synopsis": "Directly loaded ROM file from path: " + path,
-		"max_players": 2
-	}
+		"max_players": 1
+	})
 	_db.save_game(custom_game)
 	_loaded_games[custom_game["id"]] = custom_game
 	_all_scanned_games.append(custom_game)
@@ -484,7 +516,7 @@ func _on_menu_scan_dir_requested() -> void:
 
 func _on_file_dialog_dir_selected(dir_path: String) -> void:
 	_status_label.text = "Scanning custom directory: " + dir_path + "..."
-	var extensions = [".sfc", ".smc", ".nes", ".md", ".smd", ".gba", ".iso", ".zip", ".7z", ".chd", ".nsp", ".xci"]
+	var extensions = _all_rom_extensions()
 	var dir = DirAccess.open(dir_path)
 	if dir:
 		dir.list_dir_begin()
@@ -493,11 +525,11 @@ func _on_file_dialog_dir_selected(dir_path: String) -> void:
 		while file_name != "":
 			if not dir.current_is_dir():
 				for ext in extensions:
-					if file_name.ends_with(ext):
-						var rom_data = {
+					if file_name.to_lower().ends_with(ext):
+						var rom_data = _merge_with_saved({
 							"id": "dir_" + file_name,
 							"title": file_name.get_basename().capitalize(),
-							"platform": "custom",
+							"platform": _guess_platform_from_extension(file_name),
 							"file_path": dir_path + "/" + file_name,
 							"developer": "Scanned ROM",
 							"release_year": 2000,
@@ -508,14 +540,16 @@ func _on_file_dialog_dir_selected(dir_path: String) -> void:
 							"total_play_time": 0,
 							"synopsis": "Scanned from custom directory " + dir_path,
 							"max_players": 2
-						}
-						_db.save_game(rom_data)
-						_all_scanned_games.append(rom_data)
-						_loaded_games[rom_data["id"]] = rom_data
-						count += 1
+						})
+						if not _loaded_games.has(rom_data["id"]): # Skip ROMs already in the library
+							_db.save_game(rom_data, false)
+							_all_scanned_games.append(rom_data)
+							_loaded_games[rom_data["id"]] = rom_data
+							count += 1
 						break
 			file_name = dir.get_next()
 		dir.list_dir_end()
+		_db.save_database()
 		_status_label.text = "Scan complete. Added " + str(count) + " ROM files from " + dir_path
 		_update_displayed_list(_all_scanned_games)
 
@@ -529,8 +563,10 @@ func _on_menu_export_db_requested() -> void:
 	_file_dialog.popup_centered()
 
 func _on_file_dialog_export_selected(path: String) -> void:
-	_db.save_database()
-	_status_label.text = "Exported library database backup to " + path
+	if _db.export_to(path):
+		_status_label.text = "Exported library database backup to " + path
+	else:
+		_status_label.text = "⚠️ Couldn't write backup to " + path
 
 func _on_menu_import_db_requested() -> void:
 	_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
@@ -542,7 +578,9 @@ func _on_menu_import_db_requested() -> void:
 	_file_dialog.popup_centered()
 
 func _on_file_dialog_import_selected(path: String) -> void:
-	_db.load_database()
+	if not _db.import_from(path):
+		_status_label.text = "⚠️ Couldn't read a library database from " + path
+		return
 	_load_and_scan_games()
 	_status_label.text = "Imported library database from " + path
 
@@ -556,20 +594,24 @@ func _load_and_scan_games() -> void:
 	_all_scanned_games.clear()
 	_loaded_games.clear()
 
-	# Scan user ROM directories
-	var extensions = [".sfc", ".smc", ".nes", ".md", ".smd", ".gba", ".iso", ".zip", ".7z", ".chd", ".nsp", ".xci"]
+	# Scan user ROM directories, using each platform's own file extensions
+	var platform_extensions = {}
+	for plat in RomDirectoryManagerScript.get_all_supported_platforms():
+		platform_extensions[plat["id"]] = plat["ext"]
+
 	for dir_path in paths:
 		var dir = DirAccess.open(dir_path)
+		var extensions = platform_extensions.get(dir_path.get_file(), [])
 		if dir:
 			dir.list_dir_begin()
 			var file_name = dir.get_next()
 			while file_name != "":
 				if not dir.current_is_dir():
 					for ext in extensions:
-						if file_name.ends_with(ext):
+						if file_name.to_lower().ends_with(ext):
 							var plat_name = dir_path.get_file()
 							var title_clean = file_name.get_basename().capitalize()
-							var rom_data = {
+							var rom_data = _merge_with_saved({
 								"id": plat_name + "_" + file_name,
 								"title": title_clean,
 								"platform": plat_name,
@@ -583,13 +625,22 @@ func _load_and_scan_games() -> void:
 								"total_play_time": 0,
 								"synopsis": "A classic " + plat_name.to_upper() + " retro title scanned from disk.",
 								"max_players": 2
-							}
-							_db.save_game(rom_data)
+							})
+							_db.save_game(rom_data, false)
 							_all_scanned_games.append(rom_data)
 							_loaded_games[rom_data["id"]] = rom_data
 							break
 				file_name = dir.get_next()
 			dir.list_dir_end()
+
+	# Bring back ROMs added with Open ROM / Scan Directory that still exist on disk
+	for saved in _db.get_all_games():
+		var saved_id = str(saved.get("id", ""))
+		if (saved_id.begins_with("custom_") or saved_id.begins_with("dir_")) and not _loaded_games.has(saved_id):
+			if FileAccess.file_exists(saved.get("file_path", "")):
+				var restored = saved.duplicate()
+				_all_scanned_games.append(restored)
+				_loaded_games[saved_id] = restored
 
 	# Seed sample games if folder is empty or for demonstration
 	if _all_scanned_games.is_empty():
@@ -693,15 +744,46 @@ func _load_and_scan_games() -> void:
 				"max_players": 4
 			}
 		]
-		for g in sample_games:
-			_db.save_game(g)
+		for sample in sample_games:
+			var g = _merge_with_saved(sample)
+			_db.save_game(g, false)
 			_all_scanned_games.append(g)
 			_loaded_games[g["id"]] = g
+
+	_db.save_database()
 
 	_status_label.text = "3DRetro Ready. Displaying " + str(_all_scanned_games.size()) + " games across " + str(paths.size()) + " platform folders."
 	_update_displayed_list(_all_scanned_games)
 	if not _all_scanned_games.is_empty():
 		_on_game_selected(_all_scanned_games[0]["id"])
+
+# Keeps favorites, play stats and scraped metadata from the saved library when a ROM is rescanned.
+func _merge_with_saved(rom_data: Dictionary) -> Dictionary:
+	var saved = _db.get_game(rom_data["id"])
+	if saved.is_empty():
+		return rom_data
+	var merged = saved.duplicate()
+	for key in ["file_path", "platform"]:
+		if rom_data.has(key):
+			merged[key] = rom_data[key]
+	return merged
+
+func _all_rom_extensions() -> Array:
+	var exts = []
+	for plat in RomDirectoryManagerScript.get_all_supported_platforms():
+		for ext in plat["ext"]:
+			if not exts.has(ext):
+				exts.append(ext)
+	return exts
+
+# Platform for a file whose extension belongs to exactly one system; "custom" when ambiguous (.zip, .iso, ...).
+func _guess_platform_from_extension(path: String) -> String:
+	var ext = "." + path.get_extension().to_lower()
+	var matches = []
+	for plat in RomDirectoryManagerScript.get_all_supported_platforms():
+		if plat["ext"].has(ext):
+			matches.append(plat["id"])
+	return matches[0] if matches.size() == 1 else "custom"
 
 func _update_displayed_list(list: Array) -> void:
 	_currently_displayed_games = list
@@ -793,7 +875,7 @@ func _on_category_selected(category: String) -> void:
 		var playlist_name = category.replace("📁 ", "").to_lower()
 		filtered = CollectionManagerScript.filter_by_collection(_all_scanned_games, "custom_" + playlist_name)
 	else:
-		filtered = _all_scanned_games.filter(func(g): return g.get("platform", "").to_lower() == category.to_lower() or category.containsn(g.get("platform", "")))
+		filtered = _all_scanned_games.filter(func(g): return str(g.get("platform", "")).to_lower() == category.to_lower())
 
 	_update_displayed_list(filtered)
 
@@ -805,6 +887,7 @@ func _on_search_text_changed(text: String) -> void:
 		_update_displayed_list(matches)
 
 func _on_game_selected(game_id: String) -> void:
+	_selected_game_id = game_id
 	if _loaded_games.has(game_id):
 		_detail_panel.display_game_details(_loaded_games[game_id])
 
@@ -818,26 +901,49 @@ func _on_metadata_download_requested(game_id: String) -> void:
 	if _loaded_games.has(game_id):
 		var game = _loaded_games[game_id]
 		var updated = ScraperServiceScript.scrape_game_metadata(game)
-		_loaded_games[game_id] = updated
-		_db.save_game(updated)
-		_detail_panel.display_game_details(updated)
+		game.merge(updated, true) # Update in place so every list sharing this entry sees it
+		_db.save_game(game)
+		_detail_panel.display_game_details(game)
 		_status_label.text = "📥 Metadata & Artwork updated for " + updated.get("title", "Game") + "."
 
 func _on_game_launch_requested(game_id: String) -> void:
 	if _loaded_games.has(game_id):
 		var game = _loaded_games[game_id]
 		var title = game.get("title", "Game")
-		var plat = game.get("platform", "SNES")
-		_status_label.text = "🚀 Launching " + title + " (" + str(plat).to_upper() + ")..."
-		_bgm_player.pause_for_game()
-		
-		game["play_count"] = game.get("play_count", 0) + 1
+		if not _active_session.is_empty():
+			_status_label.text = "⏳ " + _loaded_games.get(_active_session["game_id"], {}).get("title", "A game") + " is still running."
+			return
+
+		var result = EmulatorLaunchEngineScript.launch_game(game)
+		if result["pid"] == -1:
+			_status_label.text = "⚠️ Can't launch " + title + ": " + result["error"]
+			return
+
+		game["play_count"] = int(game.get("play_count", 0)) + 1
+		game["last_played"] = int(Time.get_unix_time_from_system())
 		_db.save_game(game)
 
-		var pid = EmulatorLaunchEngineScript.launch_game(game)
+		if result["pid"] == 0:
+			_status_label.text = "🚀 Opened " + title + "."
+			return
+
+		_bgm_player.pause_for_game()
 		_status_label.text = "🎮 Running " + title + " (Session Active)..."
-		
-		get_tree().create_timer(3.0).timeout.connect(func():
-			_status_label.text = "Finished session for " + title + "."
-			_bgm_player.resume_after_game()
-		)
+		_active_session = {"game_id": game_id, "pid": result["pid"], "started_msec": Time.get_ticks_msec()}
+		_session_timer.start()
+
+func _poll_active_session() -> void:
+	if _active_session.is_empty() or OS.is_process_running(_active_session["pid"]):
+		return
+	_session_timer.stop()
+	var minutes = int(round((Time.get_ticks_msec() - _active_session["started_msec"]) / 60000.0))
+	var game = _loaded_games.get(_active_session["game_id"], {})
+	_active_session = {}
+	_bgm_player.resume_after_game()
+	if game.is_empty():
+		return
+	game["total_play_time"] = int(game.get("total_play_time", 0)) + minutes
+	_db.save_game(game)
+	if _selected_game_id == game.get("id", ""):
+		_detail_panel.display_game_details(game)
+	_status_label.text = "Finished session for " + game.get("title", "Game") + " (" + str(minutes) + " min)."

@@ -117,7 +117,7 @@ func _populate_categories() -> void:
 	_button_container.add_child(HSeparator.new())
 	_add_header("SYSTEM PLATFORMS")
 	for plat in RomDirectoryManagerScript.get_all_supported_platforms():
-		_add_button(plat["name"])
+		_add_button(plat["name"], false, plat["id"])
 
 func _add_header(text_val: String) -> void:
 	var lbl = Label.new()
@@ -126,7 +126,8 @@ func _add_header(text_val: String) -> void:
 	lbl.add_theme_color_override("font_color", _current_accent_color.lightened(0.35))
 	_button_container.add_child(lbl)
 
-func _add_button(label: String, set_as_default: bool = false) -> void:
+# category_id is what gets emitted; it defaults to the label (platform buttons emit their platform id).
+func _add_button(label: String, set_as_default: bool = false, category_id: String = "") -> void:
 	var btn = Button.new()
 	btn.text = "  " + label
 	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -135,7 +136,7 @@ func _add_button(label: String, set_as_default: bool = false) -> void:
 	
 	btn.pressed.connect(func():
 		_set_active_button(btn)
-		category_selected.emit(label)
+		category_selected.emit(category_id if category_id != "" else label)
 	)
 	_button_container.add_child(btn)
 

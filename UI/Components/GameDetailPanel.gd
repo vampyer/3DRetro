@@ -207,9 +207,10 @@ func display_game_details(game: Dictionary) -> void:
 	_title_lbl.text = title
 	_platform_lbl.text = "Platform: " + plat
 	_developer_lbl.text = "Developer: " + game.get("developer", "Unknown")
-	_genre_rating_lbl.text = "Genre: " + game.get("genre", "Classic") + " | Rating: ★★★★★"
+	var stars = clampi(int(round(float(game.get("rating", 0)))), 0, 5)
+	_genre_rating_lbl.text = "Genre: " + game.get("genre", "Classic") + " | Rating: " + ("★".repeat(stars) + "☆".repeat(5 - stars) if stars > 0 else "Not rated")
 	_description_lbl.text = game.get("synopsis", game.get("description", "No description available."))
-	_playtime_lbl.text = "🕒 Total Playtime: " + str(game.get("total_play_time", game.get("playtime", 0))) + " mins"
+	_playtime_lbl.text = "🕒 Total Playtime: " + str(int(game.get("total_play_time", game.get("playtime", 0)))) + " mins"
 	_fav_btn.text = "★ Favorited" if game.get("is_favorite", false) else "☆ Add to Favorites"
 	
 	_cover_banner.texture = _generate_banner_texture(title, plat)

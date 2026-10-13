@@ -23,3 +23,8 @@ App/Emulators/
 App/RetroArch/
 App/system_configs.json
 App/emulation_data.db
+
+# Library data and folders the app creates next to itself when run from the editor
+3dretro_database.json
+roms/
+emulators/
