@@ -1,50 +1,44 @@
 # 3DRetro
 
-**High-Performance Windows Desktop Emulation Frontend built with Godot 4.7 .NET, C# 12, and .NET 8**
+**Windows desktop emulation frontend built with Godot 4.7 and GDScript**
 
-3DRetro is a modern, high-performance desktop emulation frontend designed for Windows. It provides a locked 60+ FPS user interface, decoupled MVVM architecture, automatic emulator installation, and multiple UI presentation views (including a 3D arcade carousel).
-
----
-
-## Key Features
-
-- **4 UI Interface Models**:
-  - **🖥️ Classic 3-Column Desktop View**: Grid view with left navigation sidebar and rich detail pane.
-  - **📺 Couch Big Picture TV Mode**: 10-foot console interface designed for gamepads and TV setups.
-  - **📋 Minimalist Compact List View**: High-density tabular list for instant sorting across large libraries.
-  - **🕹️ 3D Arcade Carousel View**: Immersive 3D curved cover wall with studio lighting and dynamic camera.
-
-- **System & Emulator Configuration**:
-  - Hybrid downloader supporting Standalone Windows executables and Libretro `.dll` cores.
-  - Automatic RetroArch runtime deployment and auto-generation of 33 platform ROM directories.
-  - Aspect ratio switching (4:3, 16:9, Integer Scale), console artwork bezels, and CRT scanline shaders.
-
-- **Smart Collections & Custom Playlists**:
-  - Built-in smart filters: Favorites, Recently Played, Never Played, 2-Player (2P+), Party Games (4P+), and Arcade Classics.
-  - User custom collections (e.g. "Mario Franchise", "Zelda Series", "RPGs").
-
-- **Gamepad Autoconfig & Emergency Hotkeys**:
-  - Automatic detection and mapping for Xbox, PlayStation, and Nintendo Switch Pro controllers.
-  - Emergency escape hotkeys (`Alt + Esc` / `Select + Start`).
-
-- **Rich Scraped Metadata & Video Snap Previews**:
-  - Scrapes boxart, logos, developers, release years, community ratings, and game synopses.
-  - Embedded gameplay video trailer player with hover delays.
-  - RetroAchievements integration for trophies and hardcore points.
-
-- **Interactive UI Customization**:
-  - Built-in color themes (Cyberpunk Dark, Synthwave Retro, Modern Clean Dark, Clean Light).
-  - Custom RGBA color picker dialog for personalization.
+3DRetro scans your ROM folders, shows your library in several gamepad-friendly views, and launches games through RetroArch or standalone emulators.
 
 ---
 
-## Tech Stack & Architecture
+## Features
 
-- **Engine**: Godot 4.7 .NET / C# 12
-- **Runtime**: .NET 8 (`net8.0-windows`)
-- **Database**: LiteDB
-- **Concurrency**: `System.Threading.Channels` for non-blocking background ROM scanning
-- **Process Management**: Win32 P/Invoke (`user32.dll`), `Stopwatch` playtime tracking
+- **5 interface views** (switch with the view selector or LB / RB on a controller):
+  - **🖥️ Classic 3-Column Desktop**: grid with a category sidebar and a detail pane.
+  - **📺 Couch Big Picture TV**: 10-foot hero view with a horizontal game row.
+  - **📋 Minimalist Compact List**: sortable table of title, platform, developer, year and playtime.
+  - **🏎️ Vertical Wheel**: curved wheel of games with a detail card.
+  - **🏛️ Console Showcase**: browse by system.
+
+- **ROM library**:
+  - Creates a `roms/<platform>` folder for each of 33 systems next to the app and scans them using each system's file extensions.
+  - Open a single ROM or scan any extra folder from the File menu.
+  - Favorites, play counts, last played and playtime are kept across restarts in `3dretro_database.json` (next to the app, or in Godot's `user://` folder if that isn't writable).
+  - Export and import the library database as JSON.
+
+- **Launching**:
+  - Uses RetroArch (`emulators/retroarch/retroarch.exe` plus the core in `emulators/retroarch/cores/`) when available, otherwise a standalone emulator under `emulators/<name>/`.
+  - Tracks the running emulator to record playtime and pause background music during play.
+
+- **Smart collections**: All Games, Favorites, Recently Played, Never Played, 2-Player, Party (4P+), Arcade Classics, plus title-based playlists.
+
+- **Gamepad**:
+  - Auto-detects controllers and focuses the UI. Input mode can be Auto-Detect, Gamepad or Keyboard & Mouse.
+  - A: launch · B: Console Showcase · X: scrape selected game · Y: favorite selected game · LB/RB: switch view · Start: menu · Back: hotkey guide.
+
+- **Customization**: built-in color themes and skins, custom color picker.
+
+### Not finished yet
+
+- The metadata scraper fills in placeholder values; it doesn't download real metadata or artwork.
+- Per-system settings (aspect ratio, shader, bezel, extra args) aren't saved or passed to emulators yet.
+- RetroAchievements shows sample badges, and the video snap panel shows cover art only (no video playback).
+- Background music has no soundtrack loaded.
 
 ---
 
@@ -52,22 +46,21 @@
 
 ### Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [Godot Engine 4.4 / 4.7 (.NET / C# Version)](https://godotengine.org/download)
+- [Godot Engine 4.7](https://godotengine.org/download) (standard build, no .NET needed)
 
-### Build & Run
+### Run
 
 ```bash
-# Clone repository
 git clone https://github.com/vampyer/3DRetro.git
 cd 3DRetro
-
-# Build C# project
-dotnet build
-
-# Launch via Godot CLI or Godot Editor
-godot --path . res://UI/Views/MainDashboard.cs
+godot --path .
 ```
+
+Or open `project.godot` in the Godot editor and press Play. Running from the editor creates `roms/`, `emulators/` and the database inside the project folder; these are git-ignored.
+
+### Export
+
+Use the **Windows Desktop** export preset (`build/3DRetro.exe`).
 
 ---
 

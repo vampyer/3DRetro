@@ -6,7 +6,8 @@ extends RefCounted
 
 static func build_launch_command(game: Dictionary) -> Dictionary:
 	var platform = str(game.get("platform", "snes")).to_lower()
-	var rom_path = game.get("rom_path", "")
+	# Scanned games store their path in "file_path"; "rom_path" is kept for older entries
+	var rom_path = game.get("file_path", game.get("rom_path", ""))
 	var base_dir = RomDirectoryManager.get_base_dir()
 	var emu_dir = base_dir.path_join("emulators")
 
@@ -36,8 +37,8 @@ static func build_launch_command(game: Dictionary) -> Dictionary:
 	}
 
 	var ra_exe = emu_dir.path_join("retroarch/retroarch.exe")
-	if FileAccess.file_exists(ra_exe) and ra_cores.has(platform):
-		var core_path = emu_dir.path_join("retroarch/cores").path_join(ra_cores[platform])
+	var core_path = emu_dir.path_join("retroarch/cores").path_join(ra_cores.get(platform, ""))
+	if FileAccess.file_exists(ra_exe) and ra_cores.has(platform) and FileAccess.file_exists(core_path):
 		return {
 			"executable": ra_exe,
 			"args": ["-L", core_path, rom_path, "-f"],
@@ -67,13 +68,29 @@ static func build_launch_command(game: Dictionary) -> Dictionary:
 		"type": "standalone"
 	}
 
-static func launch_game(game: Dictionary) -> int:
+## Returns {"pid": int, "error": String}. pid is -1 when nothing was started,
+## and 0 when the game was opened through the shell without a process to track.
+static func launch_game(game: Dictionary) -> Dictionary:
 	var cmd = build_launch_command(game)
 	var exe = cmd["executable"]
 	var args = cmd["args"]
+	var rom_path = game.get("file_path", game.get("rom_path", ""))
 
-	if OS.has_feature("windows") and FileAccess.file_exists(exe):
-		return OS.create_process(exe, PackedStringArray(args))
-	else:
+	if rom_path == "" or not FileAccess.file_exists(rom_path):
+		return {"pid": -1, "error": "ROM file not found" + (": " + rom_path if rom_path != "" else "")}
+	if not FileAccess.file_exists(exe):
+		return {"pid": -1, "error": "No emulator found for " + str(game.get("platform", "")).to_upper() + ". Add RetroArch or a standalone emulator under emulators/"}
+	if not OS.has_feature("windows"):
 		print("[EmulatorLaunchEngine] Simulating launch for: ", game.get("title", "Game"), " -> ", exe, " ", args)
-		return 0
+		return {"pid": -1, "error": "Launching emulators is only supported on Windows"}
+
+	# Shortcuts and scripts (.lnk/.url/.bat) can't be spawned directly; hand them to the shell (no PID to track)
+	if cmd["type"] == "native_pc" and exe.get_extension().to_lower() != "exe":
+		if OS.shell_open(exe) != OK:
+			return {"pid": -1, "error": "Failed to open " + exe.get_file()}
+		return {"pid": 0, "error": ""}
+
+	var pid = OS.create_process(exe, PackedStringArray(args))
+	if pid == -1:
+		return {"pid": -1, "error": "Failed to start " + exe.get_file()}
+	return {"pid": pid, "error": ""}

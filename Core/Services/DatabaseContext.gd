@@ -12,30 +12,64 @@ func _init() -> void:
 	_db_path = base_dir.path_join("3dretro_database.json")
 	load_database()
 
+const USER_DB_PATH = "user://3dretro_database.json"
+
 func load_database() -> void:
-	if not FileAccess.file_exists(_db_path) and FileAccess.file_exists("user://3dretro_database.json"):
-		_db_path = "user://3dretro_database.json"
-		
-	if FileAccess.file_exists(_db_path):
-		var file = FileAccess.open(_db_path, FileAccess.READ)
-		if file:
-			var json_text = file.get_as_text()
-			file.close()
-			var json = JSON.new()
-			if json.parse(json_text) == OK:
-				if typeof(json.data) == TYPE_DICTIONARY:
-					_games = json.data
+	if not FileAccess.file_exists(_db_path) and FileAccess.file_exists(USER_DB_PATH):
+		_db_path = USER_DB_PATH
+
+	var data = _read_json_file(_db_path)
+	if data != null:
+		_games = data
 
 func save_database() -> void:
-	var file = FileAccess.open(_db_path, FileAccess.WRITE)
-	if file:
-		file.store_string(JSON.stringify(_games, "\t"))
-		file.close()
+	if _write_json_file(_db_path):
+		return
+	# App folder isn't writable (e.g. installed under Program Files): keep the library in user://
+	if _db_path != USER_DB_PATH:
+		push_warning("[DatabaseContext] Can't write " + _db_path + ", saving to " + USER_DB_PATH)
+		_db_path = USER_DB_PATH
+		_write_json_file(_db_path)
 
-func save_game(game: Dictionary) -> void:
+func export_to(path: String) -> bool:
+	return _write_json_file(path)
+
+func import_from(path: String) -> bool:
+	var data = _read_json_file(path)
+	if data == null:
+		return false
+	_games = data
+	save_database()
+	return true
+
+func get_game(game_id: String) -> Dictionary:
+	return _games.get(game_id, {})
+
+func _read_json_file(path: String):
+	if not FileAccess.file_exists(path):
+		return null
+	var file = FileAccess.open(path, FileAccess.READ)
+	if not file:
+		return null
+	var json = JSON.new()
+	if json.parse(file.get_as_text()) != OK or typeof(json.data) != TYPE_DICTIONARY:
+		push_warning("[DatabaseContext] Ignoring unreadable database file: " + path)
+		return null
+	return json.data
+
+func _write_json_file(path: String) -> bool:
+	var file = FileAccess.open(path, FileAccess.WRITE)
+	if not file:
+		return false
+	file.store_string(JSON.stringify(_games, "\t"))
+	file.close()
+	return true
+
+func save_game(game: Dictionary, persist: bool = true) -> void:
 	if game.has("id"):
 		_games[game["id"]] = game
-		save_database()
+		if persist:
+			save_database()
 
 func get_all_games() -> Array:
 	return _games.values()

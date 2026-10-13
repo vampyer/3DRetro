@@ -59,8 +59,9 @@ func set_games(games: Array) -> void:
 		item.set_text(0, game.get("title", "Unknown Title"))
 		item.set_text(1, str(game.get("platform", "SNES")))
 		item.set_text(2, game.get("developer", "Unknown"))
-		item.set_text(3, str(game.get("release_year", "N/A")))
-		item.set_text(4, str(game.get("playtime", 0)) + " mins")
+		var year = int(game.get("release_year", 0))
+		item.set_text(3, str(year) if year > 0 else "N/A")
+		item.set_text(4, str(int(game.get("total_play_time", game.get("playtime", 0)))) + " mins")
 		item.set_metadata(0, game.get("id", ""))
 
 func _on_item_selected() -> void:

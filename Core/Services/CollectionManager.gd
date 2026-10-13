@@ -18,7 +18,9 @@ static func filter_by_collection(roms: Array, collection_id: String) -> Array:
         FAVORITES:
             return roms.filter(func(r): return r.get("is_favorite", false))
         RECENTLY_PLAYED:
-            return roms.filter(func(r): return r.get("play_count", 0) > 0)
+            var played = roms.filter(func(r): return r.get("play_count", 0) > 0)
+            played.sort_custom(func(a, b): return a.get("last_played", 0) > b.get("last_played", 0))
+            return played
         NEVER_PLAYED:
             return roms.filter(func(r): return r.get("play_count", 0) == 0)
         MULTIPLAYER_2P:
