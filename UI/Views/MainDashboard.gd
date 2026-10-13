@@ -66,6 +66,9 @@ var _all_scanned_games: Array = []
 var _currently_displayed_games: Array = []
 var _loaded_games: Dictionary = {}
 var _current_interface_model: int = 0
+const INTERFACE_MODEL_COUNT: int = 5
+const JOY_STICK_WAKE_THRESHOLD: float = 0.5
+var _selected_game_id: String = ""
 
 func _ready() -> void:
 	_initialize_services()
@@ -108,6 +111,9 @@ func _on_joy_connection_changed(device_id: int, connected: bool) -> void:
 	_update_gamepad_status()
 	if connected:
 		var name_str = Input.get_joy_name(device_id)
+		if _selected_input_device_mode == 2:
+			_status_label.text = "🎮 Controller Connected: " + name_str + " (Keyboard & Mouse mode is forced)"
+			return
 		_status_label.text = "🎮 Controller Connected & Enabled: " + name_str + " (Press START for Main Menu)"
 		_enable_gamepad_and_focus()
 	else:
@@ -147,7 +153,7 @@ func _enable_gamepad_and_focus() -> void:
 
 func _grab_first_ui_focus() -> void:
 	var current_focused = get_viewport().gui_get_focus_owner()
-	if current_focused and is_instance_valid(current_focused):
+	if current_focused and is_instance_valid(current_focused) and current_focused.is_visible_in_tree():
 		return # Focus is already held cleanly
 
 	var target_parent: Node = null
@@ -173,6 +179,8 @@ func _find_first_focusable(node: Node) -> Control:
 	return null
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventJoypadMotion and absf(event.axis_value) < JOY_STICK_WAKE_THRESHOLD:
+		return # Ignore stick drift and resting triggers
 	if event is InputEventJoypadButton or event is InputEventJoypadMotion:
 		if _selected_input_device_mode != 2: # Unless forced Keyboard/Mouse
 			var focus_owner = get_viewport().gui_get_focus_owner()
@@ -200,29 +208,42 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.button_index == JOY_BUTTON_BACK:
 			if _hotkey_guide_modal: _hotkey_guide_modal.popup_centered()
 		elif event.button_index == JOY_BUTTON_LEFT_SHOULDER:
-			var prev_model = (_current_interface_model - 1 + 5) % 5
+			var prev_model = (_current_interface_model - 1 + INTERFACE_MODEL_COUNT) % INTERFACE_MODEL_COUNT
 			_interface_model_selector.selected = prev_model
 			_switch_interface_model(prev_model)
 		elif event.button_index == JOY_BUTTON_RIGHT_SHOULDER:
-			var next_model = (_current_interface_model + 1) % 5
+			var next_model = (_current_interface_model + 1) % INTERFACE_MODEL_COUNT
 			_interface_model_selector.selected = next_model
 			_switch_interface_model(next_model)
 		elif event.button_index == JOY_BUTTON_Y:
-			var focus_owner = get_viewport().gui_get_focus_owner()
-			if focus_owner and "game_data" in focus_owner and "id" in focus_owner.game_data:
-				_on_favorite_toggled(focus_owner.game_data["id"])
+			var game_id = _get_active_game_id()
+			if game_id != "":
+				_on_favorite_toggled(game_id)
+				var is_fav = _loaded_games[game_id].get("is_favorite", false)
+				_status_label.text = ("⭐ Added to Favorites: " if is_fav else "☆ Removed from Favorites: ") + _loaded_games[game_id].get("title", "Game")
 			elif _sidebar_nav and _sidebar_nav.has_method("focus_search_box"):
 				_sidebar_nav.focus_search_box()
 		elif event.button_index == JOY_BUTTON_X:
-			var focus_owner = get_viewport().gui_get_focus_owner()
-			if focus_owner and "game_data" in focus_owner and "id" in focus_owner.game_data:
-				_on_metadata_download_requested(focus_owner.game_data["id"])
+			var game_id = _get_active_game_id()
+			if game_id != "":
+				_on_metadata_download_requested(game_id)
 			elif _sidebar_nav and _sidebar_nav.has_method("focus_search_box"):
 				_sidebar_nav.focus_search_box()
 		elif event.button_index == JOY_BUTTON_B:
 			if _current_interface_model != 4:
 				_interface_model_selector.selected = 4
 				_switch_interface_model(4)
+
+# Game the current view has selected, or "" when none applies (e.g. System Showcase).
+func _get_active_game_id() -> String:
+	if _current_interface_model == 4:
+		return ""
+	if _selected_game_id == "" or not _loaded_games.has(_selected_game_id):
+		return ""
+	# Ignore a stale selection that a search or filter has hidden from the current list
+	if not _currently_displayed_games.any(func(g): return g.get("id", "") == _selected_game_id):
+		return ""
+	return _selected_game_id
 
 func _toggle_fullscreen() -> void:
 	var mode = DisplayServer.window_get_mode()
@@ -407,13 +428,18 @@ func _initialize_ui_components() -> void:
 	add_child(_system_config_modal)
 
 	_achievements_modal = RetroAchievementsModalScript.new()
+	add_child(_achievements_modal)
+
 	_hotkey_guide_modal = HotkeyGuideModalScript.new()
 	add_child(_hotkey_guide_modal)
 
 	_start_menu_modal = RetroBatStartMenuModalScript.new()
 	_start_menu_modal.scraper_requested.connect(func():
-		if not _currently_displayed_games.is_empty():
-			_on_metadata_download_requested(_currently_displayed_games[0].get("id", ""))
+		var game_id = _get_active_game_id()
+		if game_id == "" and not _currently_displayed_games.is_empty():
+			game_id = _currently_displayed_games[0].get("id", "")
+		if game_id != "":
+			_on_metadata_download_requested(game_id)
 	)
 	_start_menu_modal.system_settings_requested.connect(_on_system_config_requested)
 	_start_menu_modal.input_device_settings_requested.connect(func():
@@ -805,6 +831,7 @@ func _on_search_text_changed(text: String) -> void:
 		_update_displayed_list(matches)
 
 func _on_game_selected(game_id: String) -> void:
+	_selected_game_id = game_id
 	if _loaded_games.has(game_id):
 		_detail_panel.display_game_details(_loaded_games[game_id])
 
